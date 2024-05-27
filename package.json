@@ -10,7 +10,8 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "frog": "latest",
-    "hono": "^4"
+    "hono": "^4",
+    "mint.club-v2-sdk": "^1.0.0"
   },
   "devDependencies": {
     "tsx": "^4.7.1",
