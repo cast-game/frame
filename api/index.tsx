@@ -54,8 +54,10 @@ export const app = new Frog<State>({
 	},
 	// Supply a Hub to enable frame verification.
 	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
-});
+	verify: "silent",
+}) as any;
 
+// @ts-ignore
 app.frame("/", neynarMiddleware, (c) => {
 	const {
 		deriveState,
@@ -81,19 +83,20 @@ app.frame("/", neynarMiddleware, (c) => {
 
 	let indexed: boolean;
 
-	const state = deriveState((previousState: any) => {
+	// @ts-ignore
+	const state = deriveState((previousState) => {
 		if (transactionId !== "0x") previousState.txHash = transactionId;
 		if (indexed) previousState.indexed = true;
 	});
 
 	const getImage = async () => {
-		// if (state.txHash !== "0x") {
-		// 	return `${process.env.BASE_URL}/frame-tx-success.png`;
-		// }
+		if (!["0x", null].includes(state.txHash)) {
+			return `${process.env.BASE_URL}/tx-success.png`;
+		}
 
 		let socialCapitalValue = "-";
 		// TODO: fix frameData and remove this
-		const castHash = "0xaf2596c0a498f4dd0f47fea40c20fe151471e30d";
+		const castHash = "0x1f87f72d06ba1ae45cc87574d656d0ed918315a8";
 
 		// TODO remove !
 		if (!frameData) {
@@ -111,7 +114,7 @@ app.frame("/", neynarMiddleware, (c) => {
 				}}
 			>
 				<img
-					src={`${process.env.BASE_URL}/frame-bg.png`}
+					src={`${process.env.BASE_URL}/ticket-bg.png`}
 					style={{
 						position: "absolute",
 					}}
@@ -127,9 +130,10 @@ app.frame("/", neynarMiddleware, (c) => {
 						position: "relative",
 					}}
 				>
-					<span>
-						Cast by {cast.author.username} in /{channel}
-					</span>
+					<div style={{ display: "flex", justifyContent: "space-between" }}>
+						<span>Cast by {cast.author.username}</span>
+						<span>/{channel}</span>
+					</div>
 					<div
 						style={{
 							display: "flex",
@@ -188,13 +192,87 @@ app.frame("/", neynarMiddleware, (c) => {
 		return [
 			<Button>Buy Ticket</Button>,
 			<Button.Reset>Refresh</Button.Reset>,
-			<Button>Game Details</Button>,
+			<Button action="/details/memes">Game Details</Button>,
 		];
 	};
 
 	return c.res({
 		image: getImage(),
 		intents: getIntents(),
+	});
+});
+
+// @ts-ignore
+app.frame("/details/:channel", (c) => {
+	const { req } = c;
+
+	// mock data
+	const prizePool = 90123;
+	const prizePoolUSD = 1234.56;
+	const txCount = 829;
+	const timeUntilTradingHalt = "5 hours"
+
+	return c.res({
+		image: (
+			<div
+				style={{
+					display: "flex",
+				}}
+			>
+				<img
+					src={`${process.env.BASE_URL}/frame-bg.png`}
+					style={{
+						position: "absolute",
+					}}
+				/>
+				<div
+					style={{
+						display: "flex",
+						width: "100%",
+						padding: "5.5rem",
+						flexDirection: "column",
+						gap: "2rem",
+						fontSize: "3rem",
+						position: "relative",
+						alignItems: "center",
+					}}
+				>
+					<span>
+						cast.game x {req.path.split("/")[req.path.split("/").length - 1]}
+					</span>
+					<span>Prize Pool:</span>
+					<div
+						style={{
+							display: "flex",
+							flexDirection: "column",
+							alignItems: "center",
+						}}
+					>
+						<span style={{ fontSize: "5rem", fontWeight: 700 }}>
+							{prizePool} DEGEN
+						</span>
+						<span style={{ fontWeight: 600 }}>${prizePoolUSD}</span>
+					</div>
+					<div
+						style={{
+							display: "flex",
+							width: "100%",
+							justifyContent: "space-between",
+							fontSize: "2.5rem",
+							position: "absolute",
+							bottom: "0",
+						}}
+					>
+						<span>{txCount} tickets purchased</span>
+						<span>Trading stops in {timeUntilTradingHalt}</span>
+					</div>
+				</div>
+			</div>
+		),
+		intents: [
+			<Button action="/">Return</Button>,
+			<Button.Link href="https://cast.game/about">Learn more</Button.Link>,
+		],
 	});
 });
 
