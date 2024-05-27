@@ -1,19 +1,38 @@
-import { Button, Frog, TextInput } from "frog";
+import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
 import { serveStatic } from "frog/serve-static";
-// import { neynar } from 'frog/hubs'
+import { neynar as neynarHub } from "frog/hubs";
+import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
+import { init, fetchQuery } from "@airstack/node";
 import { config } from "dotenv";
+import { getSCVQuery } from "../lib/constants.js";
 config();
+
+init(process.env.AIRSTACK_API_KEY!);
 
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
 // }
 
-export const app = new Frog({
+type State = {
+	txHash: string | null;
+	indexed: boolean;
+};
+
+const neynarMiddleware = neynar({
+	apiKey: process.env.NEYNAR_API_KEY!,
+	features: ["interactor", "cast"],
+});
+
+export const app = new Frog<State>({
 	assetsPath: "/",
 	basePath: "/api",
+	initialState: {
+		txHash: null,
+		indexed: false,
+	},
 	imageOptions: {
 		fonts: [
 			{
@@ -34,15 +53,19 @@ export const app = new Frog({
 		],
 	},
 	// Supply a Hub to enable frame verification.
-	// hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
+	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
 });
 
-app.frame("/", (c) => {
-	const { buttonValue, inputText, status } = c;
+app.frame("/", neynarMiddleware, (c) => {
+	const {
+		deriveState,
+		previousState,
+		transactionId,
+		buttonValue,
+		frameData,
+	}: any = c;
 
 	// Mock data
-	const socialCapitalValue = 256.32;
-	const rank = 1;
 	const cast = {
 		author: {
 			username: "benbassler.eth",
@@ -52,11 +75,35 @@ app.frame("/", (c) => {
 	const tokenPrice = 1450;
 	const tokenSymbol = "DEGEN";
 	const holderCount = 32;
-  const supply = 55;
-  const ticketsOwned = 2;
-  const ownershipPercentage = 3.64;  
+	const supply = 55;
+	const ticketsOwned = 2;
+	const ownershipPercentage = 3.64;
 
-	const getImage = () => {
+	let indexed: boolean;
+
+	const state = deriveState((previousState: any) => {
+		if (transactionId !== "0x") previousState.txHash = transactionId;
+		if (indexed) previousState.indexed = true;
+	});
+
+	const getImage = async () => {
+		// if (state.txHash !== "0x") {
+		// 	return `${process.env.BASE_URL}/frame-tx-success.png`;
+		// }
+
+		let socialCapitalValue = "-";
+		// TODO: fix frameData and remove this
+		const castHash = "0xaf2596c0a498f4dd0f47fea40c20fe151471e30d";
+
+		// TODO remove !
+		if (!frameData) {
+			const scvQuery = await fetchQuery(getSCVQuery(castHash));
+			socialCapitalValue =
+				scvQuery.data.FarcasterCasts.Cast[0].socialCapitalValue.formattedValue.toFixed(
+					2
+				);
+		}
+
 		return (
 			<div
 				style={{
@@ -64,7 +111,7 @@ app.frame("/", (c) => {
 				}}
 			>
 				<img
-					src="http://localhost:5173/frame-bg.png"
+					src={`${process.env.BASE_URL}/frame-bg.png`}
 					style={{
 						position: "absolute",
 					}}
@@ -80,17 +127,9 @@ app.frame("/", (c) => {
 						position: "relative",
 					}}
 				>
-					<div
-						style={{
-							display: "flex",
-							justifyContent: "space-between",
-						}}
-					>
-						<span>
-							Cast by {cast.author.username} in /{channel}
-						</span>
-						<span>Rank {rank}</span>
-					</div>
+					<span>
+						Cast by {cast.author.username} in /{channel}
+					</span>
 					<div
 						style={{
 							display: "flex",
@@ -131,15 +170,15 @@ app.frame("/", (c) => {
 					<div
 						style={{
 							display: "flex",
-              width: "100%",
+							width: "100%",
 							justifyContent: "space-between",
 						}}
 					>
-            <span>
-							Supply: {supply} tickets
+						<span>Supply: {supply} tickets</span>
+						<span>
+							You own {ticketsOwned} tickets ({ownershipPercentage}%)
 						</span>
-						<span>You own {ticketsOwned} tickets ({ownershipPercentage}%)</span>
-          </div>
+					</div>
 				</div>
 			</div>
 		);
@@ -147,9 +186,9 @@ app.frame("/", (c) => {
 
 	const getIntents = () => {
 		return [
-			<Button>Buy</Button>,
+			<Button>Buy Ticket</Button>,
 			<Button.Reset>Refresh</Button.Reset>,
-			<Button>Game details</Button>,
+			<Button>Game Details</Button>,
 		];
 	};
 
