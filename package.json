@@ -10,12 +10,14 @@
   "dependencies": {
     "@airstack/node": "^0.0.7",
     "@neynar/nodejs-sdk": "^1.27.0",
+    "@prisma/client": "^5.14.0",
     "dotenv": "^16.4.5",
     "frog": "latest",
     "hono": "^4",
     "mint.club-v2-sdk": "^1.0.0"
   },
   "devDependencies": {
+    "prisma": "^5.14.0",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
     "vercel": "^32.4.1"
