@@ -7,7 +7,7 @@ import { handle } from "frog/vercel";
 import { init, fetchQuery } from "@airstack/node";
 import { config } from "dotenv";
 import { getSCVQuery } from "../lib/constants.js";
-import { getCast } from "../lib/neynar.js";
+import { getCast, getChannel } from "../lib/neynar.js";
 config();
 
 init(process.env.AIRSTACK_API_KEY!);
@@ -28,6 +28,7 @@ const neynarMiddleware = neynar({
 	features: ["interactor", "cast"],
 });
 
+// @ts-ignore
 export const app = new Frog<State>({
 	assetsPath: "/",
 	basePath: "/api",
@@ -60,11 +61,12 @@ export const app = new Frog<State>({
 	verify: "silent",
 }) as any;
 
+// @ts-ignore
 app.frame("/", (c) => {
 	return c.res({
 		image: <></>,
 		intents: [
-			<Button action="/ticket/0x1f87f72d06ba1ae45cc87574d656d0ed918315a8">
+			<Button action="/ticket/0x372d4633cae9edcfdea4c3f37dcd519de0c78d8f">
 				View Ticket
 			</Button>,
 		],
@@ -73,24 +75,11 @@ app.frame("/", (c) => {
 
 // @ts-ignore
 app.frame("/ticket/:hash", neynarMiddleware, (c) => {
-	const {
-		req,
-		deriveState,
-		previousState,
-		transactionId,
-		buttonValue,
-		frameData,
-	}: any = c;
+	const { req, deriveState, previousState, transactionId }: any = c;
 
 	const castHash = req.path.split("/")[req.path.split("/").length - 1];
 
 	// Mock data
-	// const cast = {
-	// 	author: {
-	// 		username: "benbassler.eth",
-	// 	},
-	// };
-	const channel = "memes";
 	const tokenPrice = 1450;
 	const tokenSymbol = "DEGEN";
 	const holderCount = 32;
@@ -113,6 +102,7 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 		}
 
 		const cast = await getCast(castHash);
+		const channel = await getChannel(cast.parent_url!);
 
 		const scvQuery = await fetchQuery(getSCVQuery(castHash));
 		const socialCapitalValue =
@@ -137,7 +127,7 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 						display: "flex",
 						flexDirection: "column",
 						width: "100%",
-						padding: "5.5rem",
+						padding: "4.5rem 5.5rem",
 						fontSize: "2.5rem",
 						gap: "2rem",
 						position: "relative",
@@ -146,9 +136,33 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 					<div style={{ display: "flex", justifyContent: "space-between" }}>
 						<div style={{ display: "flex", alignItems: "center" }}>
 							{/* TODO: add pfp */}
-							<span>Cast by {cast.author.username}</span>
+							{/* <span>Cast by {cast.author.username}</span> */}
+							<div
+								style={{
+									display: "flex",
+									alignItems: "center",
+									gap: ".7rem",
+								}}
+							>
+								<span>Cast by</span>
+								<img
+									src={cast.author.pfp_url}
+									style={{ borderRadius: "50%" }}
+									width="55px"
+									height="55px"
+								/>
+								<span>{cast.author.username}</span>
+							</div>
 						</div>
-						<span>/{channel}</span>
+						<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+							<img
+								src={channel.image_url}
+								style={{ borderRadius: "50%" }}
+								width="55px"
+								height="55px"
+							/>
+							<span>/{channel.id}</span>
+						</div>
 					</div>
 					<div
 						style={{
