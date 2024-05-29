@@ -19,6 +19,7 @@ init(process.env.AIRSTACK_API_KEY!);
 
 type State = {
 	castHash: string | null;
+	channelId: string | null;
 	txHash: string | null;
 	indexed: boolean;
 };
@@ -34,6 +35,7 @@ export const app = new Frog<State>({
 	basePath: "/api",
 	initialState: {
 		castHash: null,
+		channelId: null,
 		txHash: null,
 		indexed: false,
 	},
@@ -88,10 +90,12 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 	const ownershipPercentage = 3.64;
 
 	let indexed: boolean;
+	let channelId: string;
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
 		if (castHash) previousState.castHash = castHash;
+		if (channelId) previousState.channelId = channelId;
 		if (transactionId !== "0x") previousState.txHash = transactionId;
 		if (indexed) previousState.indexed = true;
 	});
@@ -103,6 +107,7 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 
 		const cast = await getCast(castHash);
 		const channel = await getChannel(cast.parent_url!);
+		channelId = channel.id;
 
 		const scvQuery = await fetchQuery(getSCVQuery(castHash));
 		const socialCapitalValue =
@@ -127,7 +132,7 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 						display: "flex",
 						flexDirection: "column",
 						width: "100%",
-						padding: "4.5rem 5.5rem",
+						padding: "4.8rem 5.5rem",
 						fontSize: "2.5rem",
 						gap: "2rem",
 						position: "relative",
@@ -222,7 +227,8 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 		return [
 			<Button>Buy Ticket</Button>,
 			<Button.Reset>↻</Button.Reset>,
-			<Button action="/details/memes">Game Details</Button>,
+			// TODO: fix channelId (currently undefined)
+			<Button action={`/details/${channelId}`}>Game Details</Button>,
 		];
 	};
 
