@@ -14,7 +14,8 @@
     "dotenv": "^16.4.5",
     "frog": "latest",
     "hono": "^4",
-    "mint.club-v2-sdk": "^1.0.0"
+    "mint.club-v2-sdk": "^1.0.0",
+    "viem": "^2.13.1"
   },
   "devDependencies": {
     "prisma": "^5.14.0",
