@@ -6,8 +6,11 @@ import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
 import { init, fetchQuery } from "@airstack/node";
 import { config } from "dotenv";
-import { getSCVQuery } from "../lib/constants.js";
+import { chainId, gameAddress, getSCVQuery } from "../lib/constants.js";
 import { getCast, getChannel } from "../lib/neynar.js";
+import { gameAbi } from "../lib/abis.js";
+import { parseEther, zeroAddress } from "viem";
+import { generateSignature } from "../lib/contract.js";
 config();
 
 init(process.env.AIRSTACK_API_KEY!);
@@ -64,6 +67,7 @@ export const app = new Frog<State>({
 }) as any;
 
 // @ts-ignore
+// TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
 	return c.res({
 		image: <></>,
@@ -72,6 +76,63 @@ app.frame("/", (c) => {
 				View Ticket
 			</Button>,
 		],
+	});
+});
+
+// @ts-ignore
+app.transaction("/buy", async (c) => {
+	const {
+		previousState: { castHash },
+		frameData,
+	} = c;
+
+	const cast = await getCast(castHash);
+
+	// Check if the frame is a cast
+	let referrer: string = zeroAddress;
+	if (
+		![castHash, "0x0000000000000000000000000000000000000000"].includes(
+			frameData.castId.hash
+		)
+	) {
+		const referralCast = await getCast(frameData.castId.hash);
+		if (referralCast.author.fid !== cast.author.fid) {
+			referrer =
+				referralCast.author.verified_addresses.eth_addresses[0] ??
+				referralCast.author.custody_address;
+		}
+	}
+
+	// TODO: get price from bonding curve
+	const price = parseEther("1");
+
+	const signature = await generateSignature(
+		castHash,
+		cast.author.verified_addresses.eth_addresses[0] ??
+			cast.author.custody_address,
+		BigInt(1),
+		price,
+		referrer
+	);
+
+	const args = [
+		castHash,
+		cast.author.verified_addresses.eth_addresses[0] ??
+			cast.author.custody_address,
+		BigInt(1),
+		price,
+		referrer,
+		signature,
+	];
+
+	console.log({ args });
+
+	return c.contract({
+		abi: gameAbi,
+		chainId,
+		functionName: "buy",
+		args,
+		to: gameAddress
 	});
 });
 
@@ -225,7 +286,7 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 
 	const getIntents = () => {
 		return [
-			<Button>Buy Ticket</Button>,
+			<Button.Transaction target="/buy">Buy</Button.Transaction>,
 			<Button.Reset>↻</Button.Reset>,
 			// TODO: fix channelId (currently undefined)
 			<Button action={`/details/${channelId}`}>Game Details</Button>,
