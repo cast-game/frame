@@ -2,10 +2,11 @@ import { base, baseSepolia } from "viem/chains";
 
 export const useMainnet = process.env.USE_MAINNET === "true";
 export const chain = useMainnet ? base : baseSepolia;
+export const chainId = useMainnet ? "eip155:8453" : "eip155:84532";
 
-export const ticketsAddress = "0x6e063e33112a0f3a4182af1969259e283dc305b7";
+export const ticketsAddress = "0x89184eb56b6c724b379b02ef8baa7fbdac4d02e3";
 // TODO: prob move to db
-export const gameAddress = "0xe93426c24999504d3a9ad3dd69cea6fb24faa7b7";
+export const gameAddress = "0xd141cbbfe8db842c2d9a8564fb7a3c751d461bbb";
 
 export const getSCVQuery = (castHash: string) => `{
     FarcasterCasts(

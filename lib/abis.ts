@@ -400,6 +400,7 @@ export const gameAbi = [
 		inputs: [
 			{ name: "castHash", type: "string", internalType: "string" },
 			{ name: "castCreator", type: "address", internalType: "address" },
+			{ name: "amount", type: "uint256", internalType: "uint256" },
 			{ name: "price", type: "uint256", internalType: "uint256" },
 			{ name: "referrer", type: "address", internalType: "address" },
 			{ name: "signature", type: "bytes", internalType: "bytes" },
@@ -500,6 +501,7 @@ export const gameAbi = [
 		inputs: [
 			{ name: "castHash", type: "string", internalType: "string" },
 			{ name: "castCreator", type: "address", internalType: "address" },
+			{ name: "amount", type: "uint256", internalType: "uint256" },
 			{ name: "price", type: "uint256", internalType: "uint256" },
 			{ name: "referrer", type: "address", internalType: "address" },
 			{ name: "signature", type: "bytes", internalType: "bytes" },
@@ -646,6 +648,12 @@ export const gameAbi = [
 				internalType: "string",
 			},
 			{
+				name: "amount",
+				type: "uint256",
+				indexed: false,
+				internalType: "uint256",
+			},
+			{
 				name: "price",
 				type: "uint256",
 				indexed: false,
@@ -683,6 +691,12 @@ export const gameAbi = [
 				internalType: "string",
 			},
 			{
+				name: "amount",
+				type: "uint256",
+				indexed: false,
+				internalType: "uint256",
+			},
+			{
 				name: "price",
 				type: "uint256",
 				indexed: false,
@@ -718,6 +732,7 @@ export const gameAbi = [
 	{ type: "error", name: "GameNotOver", inputs: [] },
 	{ type: "error", name: "InsufficientPayment", inputs: [] },
 	{ type: "error", name: "InvalidSignature", inputs: [] },
+	{ type: "error", name: "MaxSupply", inputs: [] },
 	{
 		type: "error",
 		name: "OwnableInvalidOwner",
