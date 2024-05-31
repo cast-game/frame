@@ -8,9 +8,7 @@ import { chainId, gameAddress } from "../lib/constants.js";
 import { getCast } from "../lib/neynar.js";
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress } from "viem";
-import {
-	generateSignature,
-} from "../lib/contract.js";
+import { generateSignature } from "../lib/contract.js";
 import { getData } from "../lib/api.js";
 
 // Uncomment to use Edge Runtime.
@@ -238,11 +236,35 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	const getImage = async () => {
 		if (state.txHash) {
 			if (state.indexed) {
-				console.log("tx success", `${process.env.BASE_URL}/tx-success.png`);
-				return `${process.env.BASE_URL}/tx-success.png`;
+				return (
+					<div
+						style={{
+							display: "flex",
+						}}
+					>
+						<img
+							src={`${process.env.BASE_URL}/tx-success.png`}
+							style={{
+								position: "absolute",
+							}}
+						/>
+					</div>
+				);
 			}
-			console.log("tx pending", `${process.env.BASE_URL}/tx-pending.png`);
-			return `${process.env.BASE_URL}/tx-pending.png`;
+			return (
+				<div
+					style={{
+						display: "flex",
+					}}
+				>
+					<img
+						src={`${process.env.BASE_URL}/tx-pending.png`}
+						style={{
+							position: "absolute",
+						}}
+					/>
+				</div>
+			);
 		}
 
 		const ownershipPercentage = (ticketsOwned / supply) * 100;
