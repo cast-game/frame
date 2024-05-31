@@ -12,9 +12,14 @@ export const getCast = async (castHash: string) => {
 	return res.cast;
 };
 
-export const getChannel = async (parentUrl: string) => {
-    const res = await neynarClient.lookupChannel(parentUrl, {
-        type: "parent_url"
-    });
-    return res.channel;
+export const getUser = async (fid: number) => {
+	const res = await neynarClient.fetchBulkUsers([fid]);
+	return res.users[0];
 }
+
+export const getChannel = async (parentUrl: string) => {
+	const res = await neynarClient.lookupChannel(parentUrl, {
+		type: "parent_url",
+	});
+	return res.channel;
+};
