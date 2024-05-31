@@ -56,3 +56,23 @@ export const generateSignature = async (
 	const signature = await deployer.signMessage({ message: { raw: hash } });
 	return signature;
 };
+
+export const getTicketSupply = async (castHash: string) => {
+	const tokenId = await ticketsContract.read.castTokenId([castHash]);
+	if (tokenId === 0) return 0;
+
+	const supply = await ticketsContract.read.supply([tokenId]);
+	return Number(supply);
+};
+
+export const getTicketsOwned = async (
+	castHash: string,
+	addresses: string[]
+) => {
+	const tokenId = await ticketsContract.read.castTokenId([castHash]);
+	if (tokenId === 0) return 0;
+
+	const balance = await ticketsContract.read.balanceOf([addresses[0], tokenId]);
+
+	return Number(balance);
+};
