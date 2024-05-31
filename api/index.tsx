@@ -4,16 +4,14 @@ import { serveStatic } from "frog/serve-static";
 import { neynar as neynarHub } from "frog/hubs";
 import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
-import { init, fetchQuery } from "@airstack/node";
-import { config } from "dotenv";
-import { chainId, gameAddress, getSCVQuery } from "../lib/constants.js";
-import { getCast, getChannel } from "../lib/neynar.js";
+import { chainId, gameAddress } from "../lib/constants.js";
+import { getCast } from "../lib/neynar.js";
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress } from "viem";
-import { generateSignature } from "../lib/contract.js";
-config();
-
-init(process.env.AIRSTACK_API_KEY!);
+import {
+	generateSignature,
+} from "../lib/contract.js";
+import { getData } from "../lib/api.js";
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -125,8 +123,6 @@ app.transaction("/buy", async (c) => {
 		signature,
 	];
 
-	console.log({ args });
-
 	return c.contract({
 		abi: gameAbi,
 		chainId,
@@ -194,21 +190,38 @@ app.transaction("/sell", async (c) => {
 });
 
 // @ts-ignore
-app.frame("/ticket/:hash", neynarMiddleware, (c) => {
-	const { req, deriveState, previousState, transactionId }: any = c;
+app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
+	const {
+		req,
+		deriveState,
+		previousState,
+		transactionId,
+		buttonValue,
+		frameData,
+	}: any = c;
 
 	const castHash = req.path.split("/")[req.path.split("/").length - 1];
 
-	// Mock data
-	const tokenPrice = 1450;
 	const tokenSymbol = "DEGEN";
-	const holderCount = 32;
-	const supply = 55;
-	const ticketsOwned = 2;
-	const ownershipPercentage = 3.64;
-
 	let indexed: boolean;
 	let channelId: string;
+
+	if (previousState.txHash && !previousState.indexed) {
+		const endpoint = `https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${transactionId}&apikey=${process.env.BASESCAN_API_KEY}`;
+		const res = await fetch(endpoint);
+
+		if (res.status === 200) indexed = true;
+	}
+
+	const {
+		cast,
+		channel,
+		socialCapitalValue,
+		ticketPrice,
+		holdersCount,
+		supply,
+		ticketsOwned,
+	} = await getData(castHash, frameData.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
@@ -216,22 +229,23 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 		if (channelId) previousState.channelId = channelId;
 		if (transactionId !== "0x") previousState.txHash = transactionId;
 		if (indexed) previousState.indexed = true;
+		if (buttonValue === "return") {
+			previousState.indexed = false;
+			previousState.txHash = null;
+		}
 	});
 
 	const getImage = async () => {
-		if (!["0x", null].includes(previousState.txHash)) {
-			return `${process.env.BASE_URL}/tx-success.png`;
+		if (state.txHash) {
+			if (state.indexed) {
+				console.log("tx success", `${process.env.BASE_URL}/tx-success.png`);
+				return `${process.env.BASE_URL}/tx-success.png`;
+			}
+			console.log("tx pending", `${process.env.BASE_URL}/tx-pending.png`);
+			return `${process.env.BASE_URL}/tx-pending.png`;
 		}
 
-		const cast = await getCast(castHash);
-		const channel = await getChannel(cast.parent_url!);
-		channelId = channel.id;
-
-		const scvQuery = await fetchQuery(getSCVQuery(castHash));
-		const socialCapitalValue =
-			scvQuery.data.FarcasterCasts.Cast[0].socialCapitalValue.formattedValue.toFixed(
-				2
-			);
+		const ownershipPercentage = (ticketsOwned / supply) * 100;
 
 		return (
 			<div
@@ -310,7 +324,7 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 						<span>Ticket Price</span>
 						<div style={{ display: "flex", alignItems: "center" }}>
 							<span style={{ fontWeight: 600 }}>
-								{tokenPrice} {tokenSymbol}
+								{ticketPrice} {tokenSymbol}
 							</span>
 						</div>
 					</div>
@@ -321,7 +335,7 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 							fontSize: "3rem",
 						}}
 					>
-						<span>Holders ({holderCount})</span>
+						<span>Holders ({holdersCount})</span>
 						<div style={{ display: "flex", alignItems: "center" }}></div>
 					</div>
 					<div
@@ -331,10 +345,15 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 							justifyContent: "space-between",
 						}}
 					>
-						<span>Supply: {supply} tickets</span>
 						<span>
-							You own {ticketsOwned} tickets ({ownershipPercentage}%)
+							Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
 						</span>
+						{ticketsOwned !== 0 && (
+							<span>
+								You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
+								{ownershipPercentage}%)
+							</span>
+						)}
 					</div>
 				</div>
 			</div>
@@ -342,13 +361,39 @@ app.frame("/ticket/:hash", neynarMiddleware, (c) => {
 	};
 
 	const getIntents = () => {
-		return [
-			<Button.Transaction target="/buy">Buy</Button.Transaction>,
-			<Button.Transaction target="/sell">Sell</Button.Transaction>,
+		if (state.txHash) {
+			if (state.indexed) {
+				return [
+					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
+						View
+					</Button.Link>,
+					<Button value="return">Done</Button>,
+				];
+			} else {
+				return [
+					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
+						View Transaction
+					</Button.Link>,
+					<Button value="refresh">Refresh</Button>,
+				];
+			}
+		}
 
-			// TODO: fix channelId (currently undefined)
+		let buttons = [
+			<Button.Transaction target="/buy">Buy</Button.Transaction>,
+			<Button.Reset>Refresh</Button.Reset>,
 			<Button action={`/details/${channelId}`}>Game Details</Button>,
 		];
+
+		if (ticketsOwned > 0) {
+			buttons.splice(
+				1,
+				0,
+				<Button.Transaction target="/sell">Sell</Button.Transaction>
+			);
+		}
+
+		return buttons;
 	};
 
 	return c.res({
