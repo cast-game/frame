@@ -37,6 +37,13 @@ export const ticketsAbi = [
 	},
 	{
 		type: "function",
+		name: "castHashes",
+		inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+		outputs: [{ name: "", type: "string", internalType: "string" }],
+		stateMutability: "view",
+	},
+	{
+		type: "function",
 		name: "castTokenId",
 		inputs: [{ name: "", type: "string", internalType: "string" }],
 		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
@@ -379,6 +386,7 @@ export const gameAbi = [
 	{
 		type: "constructor",
 		inputs: [
+			{ name: "_channelId", type: "string", internalType: "string" },
 			{
 				name: "_channelHost",
 				type: "address",
@@ -417,28 +425,28 @@ export const gameAbi = [
 	},
 	{
 		type: "function",
-		name: "creatorFeePercent",
+		name: "channelId",
+		inputs: [],
+		outputs: [{ name: "", type: "string", internalType: "string" }],
+		stateMutability: "view",
+	},
+	{
+		type: "function",
+		name: "endTime",
 		inputs: [],
 		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
 		stateMutability: "view",
 	},
 	{
 		type: "function",
-		name: "endBlock",
+		name: "feePercent",
 		inputs: [],
 		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
 		stateMutability: "view",
 	},
 	{
 		type: "function",
-		name: "hostFeePercent",
-		inputs: [],
-		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-		stateMutability: "view",
-	},
-	{
-		type: "function",
-		name: "isActive",
+		name: "isPaused",
 		inputs: [],
 		outputs: [{ name: "", type: "bool", internalType: "bool" }],
 		stateMutability: "view",
@@ -466,13 +474,6 @@ export const gameAbi = [
 		],
 		outputs: [],
 		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "protocolFeePercent",
-		inputs: [],
-		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-		stateMutability: "view",
 	},
 	{
 		type: "function",
@@ -514,11 +515,11 @@ export const gameAbi = [
 		name: "startGame",
 		inputs: [
 			{
-				name: "_tradingEndBlock",
+				name: "_tradingEndTime",
 				type: "uint256",
 				internalType: "uint256",
 			},
-			{ name: "_endBlock", type: "uint256", internalType: "uint256" },
+			{ name: "_endTime", type: "uint256", internalType: "uint256" },
 		],
 		outputs: [],
 		stateMutability: "nonpayable",
@@ -539,7 +540,7 @@ export const gameAbi = [
 	},
 	{
 		type: "function",
-		name: "tradingEndBlock",
+		name: "tradingEndTime",
 		inputs: [],
 		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
 		stateMutability: "view",
@@ -563,7 +564,7 @@ export const gameAbi = [
 	{
 		type: "function",
 		name: "updateGameStatus",
-		inputs: [{ name: "_isActive", type: "bool", internalType: "bool" }],
+		inputs: [{ name: "_isPaused", type: "bool", internalType: "bool" }],
 		outputs: [],
 		stateMutability: "nonpayable",
 	},
@@ -614,6 +615,25 @@ export const gameAbi = [
 	},
 	{
 		type: "event",
+		name: "GameStarted",
+		inputs: [
+			{
+				name: "tradingEndTime",
+				type: "uint256",
+				indexed: false,
+				internalType: "uint256",
+			},
+			{
+				name: "endTime",
+				type: "uint256",
+				indexed: false,
+				internalType: "uint256",
+			},
+		],
+		anonymous: false,
+	},
+	{
+		type: "event",
 		name: "OwnershipTransferred",
 		inputs: [
 			{
@@ -648,6 +668,18 @@ export const gameAbi = [
 				internalType: "string",
 			},
 			{
+				name: "castCreator",
+				type: "address",
+				indexed: true,
+				internalType: "address",
+			},
+			{
+				name: "referrer",
+				type: "address",
+				indexed: false,
+				internalType: "address",
+			},
+			{
 				name: "amount",
 				type: "uint256",
 				indexed: false,
@@ -655,18 +687,6 @@ export const gameAbi = [
 			},
 			{
 				name: "price",
-				type: "uint256",
-				indexed: false,
-				internalType: "uint256",
-			},
-			{
-				name: "protocolFee",
-				type: "uint256",
-				indexed: false,
-				internalType: "uint256",
-			},
-			{
-				name: "creatorFee",
 				type: "uint256",
 				indexed: false,
 				internalType: "uint256",
@@ -691,6 +711,18 @@ export const gameAbi = [
 				internalType: "string",
 			},
 			{
+				name: "castCreator",
+				type: "address",
+				indexed: true,
+				internalType: "address",
+			},
+			{
+				name: "referrer",
+				type: "address",
+				indexed: false,
+				internalType: "address",
+			},
+			{
 				name: "amount",
 				type: "uint256",
 				indexed: false,
@@ -698,18 +730,6 @@ export const gameAbi = [
 			},
 			{
 				name: "price",
-				type: "uint256",
-				indexed: false,
-				internalType: "uint256",
-			},
-			{
-				name: "protocolFee",
-				type: "uint256",
-				indexed: false,
-				internalType: "uint256",
-			},
-			{
-				name: "creatorFee",
 				type: "uint256",
 				indexed: false,
 				internalType: "uint256",
@@ -731,6 +751,7 @@ export const gameAbi = [
 	{ type: "error", name: "GameNotActive", inputs: [] },
 	{ type: "error", name: "GameNotOver", inputs: [] },
 	{ type: "error", name: "InsufficientPayment", inputs: [] },
+	{ type: "error", name: "InvalidParams", inputs: [] },
 	{ type: "error", name: "InvalidSignature", inputs: [] },
 	{ type: "error", name: "MaxSupply", inputs: [] },
 	{
