@@ -9,7 +9,7 @@ import { getCast } from "../lib/neynar.js";
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { getData } from "../lib/api.js";
+import { getData } from "../lib/data.js";
 
 // Uncomment to use Edge Runtime.
 // export const config = {
