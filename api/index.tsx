@@ -21,6 +21,7 @@ type State = {
 	channelId: string | null;
 	txHash: string | null;
 	indexed: boolean;
+	txError: boolean;
 };
 
 const neynarMiddleware = neynar({
@@ -37,6 +38,7 @@ export const app = new Frog<State>({
 		channelId: null,
 		txHash: null,
 		indexed: false,
+		txError: false,
 	},
 	imageOptions: {
 		fonts: [
@@ -176,7 +178,6 @@ app.transaction("/sell", async (c) => {
 		signature,
 	];
 
-	console.log({ args });
 
 	return c.contract({
 		abi: gameAbi,
@@ -202,13 +203,18 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 	const tokenSymbol = "DEGEN";
 	let indexed: boolean;
+	let txError: boolean;
 	let channelId: string;
 
 	if (previousState.txHash && !previousState.indexed) {
 		const endpoint = `https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${transactionId}&apikey=${process.env.BASESCAN_API_KEY}`;
 		const res = await fetch(endpoint);
 
-		if (res.status === 200) indexed = true;
+		const parsed = await res.json();
+		console.log(parsed);
+
+		if (parsed.status === "0") txError = true;
+		if (parsed.status === "1") indexed = true;
 	}
 
 	const {
@@ -227,9 +233,11 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 		if (channelId) previousState.channelId = channelId;
 		if (transactionId !== "0x") previousState.txHash = transactionId;
 		if (indexed) previousState.indexed = true;
+		if (txError) previousState.txError = true;
 		if (buttonValue === "return") {
 			previousState.indexed = false;
 			previousState.txHash = null;
+			previousState.txError = false;
 		}
 	});
 
@@ -244,6 +252,21 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 					>
 						<img
 							src={`${process.env.BASE_URL}/tx-success.png`}
+							style={{
+								position: "absolute",
+							}}
+						/>
+					</div>
+				);
+			} else if (state.txError) {
+				return (
+					<div
+						style={{
+							display: "flex",
+						}}
+					>
+						<img
+							src={`${process.env.BASE_URL}/tx-failed.png`}
 							style={{
 								position: "absolute",
 							}}
@@ -391,14 +414,20 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 					</Button.Link>,
 					<Button value="return">Done</Button>,
 				];
-			} else {
+			} else if (state.txError) {
 				return [
 					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
-						View Transaction
+						View
 					</Button.Link>,
-					<Button value="refresh">Refresh</Button>,
+					<Button value="return">Try again</Button>,
 				];
 			}
+			return [
+				<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
+					View Transaction
+				</Button.Link>,
+				<Button value="refresh">Refresh</Button>,
+			];
 		}
 
 		let buttons = [
