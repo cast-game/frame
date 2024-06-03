@@ -1,10 +1,10 @@
 import {
-	createPublicClient,
-	http,
-	getContract,
-	keccak256,
-	encodePacked,
-	zeroAddress,
+  createPublicClient,
+  http,
+  getContract,
+  keccak256,
+  encodePacked,
+  zeroAddress,
 } from "viem";
 import { ticketsAbi, gameAbi } from "./abis.js";
 import { privateKeyToAccount } from "viem/accounts";
@@ -15,64 +15,58 @@ config();
 const deployer = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
 export const client = createPublicClient({
-	chain,
-	transport: http(),
+  chain,
+  transport: http(),
 });
 
 export const gameContract = getContract({
-	address: gameAddress,
-	abi: gameAbi,
-	client,
+  address: gameAddress,
+  abi: gameAbi,
+  client,
 });
 
 export const ticketsContract = getContract({
-	address: ticketsAddress,
-	abi: ticketsAbi,
-	client,
+  address: ticketsAddress,
+  abi: ticketsAbi,
+  client,
 });
 
 export const generateSignature = async (
-	castHash: string,
-	castCreator: string,
-	amount: bigint,
-	price: bigint,
-	referrer: string = zeroAddress
+  castHash: string,
+  castCreator: string,
+  amount: bigint,
+  price: bigint,
+  referrer: string = zeroAddress
 ) => {
-	const nonce = await gameContract.read.nonce([castHash]);
-	const hash = keccak256(
-		encodePacked(
-			["string", "address", "uint256", "uint256", "address", "uint256"],
-			[
-				castHash,
-				castCreator as `0x${string}`,
-				amount,
-				price,
-				referrer as `0x${string}`,
-				nonce as bigint,
-			]
-		)
-	);
+  const nonce = await gameContract.read.nonce([castHash]);
+  const hash = keccak256(
+    encodePacked(
+      ["string", "address", "uint256", "uint256", "address", "uint256"],
+      [
+        castHash,
+        castCreator as `0x${string}`,
+        amount,
+        price,
+        referrer as `0x${string}`,
+        nonce as bigint,
+      ]
+    )
+  );
 
-	const signature = await deployer.signMessage({ message: { raw: hash } });
-	return signature;
+  const signature = await deployer.signMessage({ message: { raw: hash } });
+  return signature;
 };
 
-export const getTicketSupply = async (castHash: string) => {
-	const tokenId = await ticketsContract.read.castTokenId([castHash]);
-	if (tokenId === 0) return 0;
+export const getTokenId = async (castHash: string): Promise<bigint> =>
+  (await ticketsContract.read.castTokenId([castHash])) as bigint;
 
-	const supply = await ticketsContract.read.supply([tokenId]);
-	return Number(supply);
+export const getTicketSupply = async (tokenId: bigint) => {
+  const supply = await ticketsContract.read.supply([tokenId]);
+  return Number(supply);
 };
 
-export const getTicketsOwned = async (
-	castHash: string,
-	addresses: string[]
-) => {
-	const tokenId = await ticketsContract.read.castTokenId([castHash]);
-	if (tokenId === 0) return 0;
+export const getTicketsOwned = async (tokenId: bigint, addresses: string[]) => {
+  const balance = await ticketsContract.read.balanceOf([addresses[0], tokenId]);
 
-	const balance = await ticketsContract.read.balanceOf([addresses[0], tokenId]);
-
-	return Number(balance);
+  return Number(balance);
 };
