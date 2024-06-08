@@ -9,8 +9,7 @@ import { getCast } from "../lib/neynar.js";
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { getData } from "../lib/data.js";
-
+import { getData } from "../lib/api.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
@@ -220,9 +219,8 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
     cast,
     channel,
     socialCapitalValue,
-    ticketPrice,
-    holdersCount,
-    topHoldersPfps,
+    buyPrice,
+    sellPrice, 
     supply,
     ticketsOwned,
   } = await getData(castHash, frameData.fid);
@@ -291,7 +289,6 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
     }
 
     const ownershipPercentage = (ticketsOwned / supply) * 100;
-    console.log(topHoldersPfps);
 
     return (
       <div
@@ -370,7 +367,7 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
             <span>Ticket Price</span>
             <div style={{ display: "flex", alignItems: "center" }}>
               <span style={{ fontWeight: 600 }}>
-                {ticketPrice} {tokenSymbol}
+                {buyPrice} {tokenSymbol}
               </span>
             </div>
           </div>
