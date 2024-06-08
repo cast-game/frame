@@ -432,6 +432,13 @@ export const gameAbi = [
 	},
 	{
 		type: "function",
+		name: "creatorFeePercent",
+		inputs: [],
+		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+		stateMutability: "view",
+	},
+	{
+		type: "function",
 		name: "endTime",
 		inputs: [],
 		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
@@ -582,38 +589,6 @@ export const gameAbi = [
 		stateMutability: "nonpayable",
 	},
 	{
-		type: "function",
-		name: "winnningCreatorFeePercent",
-		inputs: [],
-		outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-		stateMutability: "view",
-	},
-	{
-		type: "event",
-		name: "GameEnded",
-		inputs: [
-			{
-				name: "castHash",
-				type: "string",
-				indexed: true,
-				internalType: "string",
-			},
-			{
-				name: "winningCreator",
-				type: "address",
-				indexed: true,
-				internalType: "address",
-			},
-			{
-				name: "ticketHolders",
-				type: "address[]",
-				indexed: false,
-				internalType: "address[]",
-			},
-		],
-		anonymous: false,
-	},
-	{
 		type: "event",
 		name: "GameStarted",
 		inputs: [
@@ -662,16 +637,16 @@ export const gameAbi = [
 				internalType: "address",
 			},
 			{
-				name: "castHash",
-				type: "string",
-				indexed: true,
-				internalType: "string",
-			},
-			{
 				name: "castCreator",
 				type: "address",
 				indexed: true,
 				internalType: "address",
+			},
+			{
+				name: "castHash",
+				type: "string",
+				indexed: false,
+				internalType: "string",
 			},
 			{
 				name: "referrer",
@@ -705,16 +680,16 @@ export const gameAbi = [
 				internalType: "address",
 			},
 			{
-				name: "castHash",
-				type: "string",
-				indexed: true,
-				internalType: "string",
-			},
-			{
 				name: "castCreator",
 				type: "address",
 				indexed: true,
 				internalType: "address",
+			},
+			{
+				name: "castHash",
+				type: "string",
+				indexed: false,
+				internalType: "string",
 			},
 			{
 				name: "referrer",

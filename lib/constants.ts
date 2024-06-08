@@ -4,9 +4,9 @@ export const useMainnet = process.env.USE_MAINNET === "true";
 export const chain = useMainnet ? base : baseSepolia;
 export const chainId = useMainnet ? "eip155:8453" : "eip155:84532";
 
-export const ticketsAddress = "0x85e80330806bd6c9032a2dFA5eb40bAAba030d94";
+export const ticketsAddress = "0xd51cb2fbe71502f0830e9d3a3bd1d90807dc12c6";
 // TODO: prob move to db
-export const gameAddress = "0x3DC173846E9aBD600119095046f0feEa21ef58b4";
+export const gameAddress = "0x116affed0a9e9dfb5ee4dd769a8b8a2a476f9927";
 
 export const apiEndpoint = "https://api-production-9d5d.up.railway.app/"
 
