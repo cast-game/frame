@@ -220,7 +220,9 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
     channel,
     socialCapitalValue,
     buyPrice,
-    sellPrice, 
+    sellPrice,
+    holdersCount,
+    topHoldersPfps,
     supply,
     ticketsOwned,
   } = await getData(castHash, frameData.fid);
@@ -378,7 +380,7 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
               fontSize: "3rem",
             }}
           >
-            <span>Holders ({holdersCount})</span>
+            <span>Holders ({holdersCount.toString()})</span>
             <div
               style={{
                 display: "flex",
@@ -408,12 +410,12 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
             <span>
               Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
             </span>
-            {ticketsOwned !== 0 && (
+            {ticketsOwned > 0 ? (
               <span>
                 You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
                 {ownershipPercentage}%)
               </span>
-            )}
+            ) : <span>Buy for potential 2x reward!</span>}
           </div>
         </div>
       </div>
