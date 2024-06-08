@@ -63,14 +63,32 @@ export const app = new Frog<State>({
 	verify: "silent",
 }) as any;
 
+app.castAction(
+	"/action",
+	// @ts-ignore
+	(c) => {
+		console.log(
+			`Cast Action to ${JSON.stringify(c.actionData.castId)} from ${
+				c.actionData.fid
+			}`
+		);
+		return c.res({
+			type: "frame",
+			path: `/ticket/${c.actionData.castId.hash}`,
+		});
+	},
+	{ name: "cast.game ticket", icon: "tag" }
+);
+
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
 	return c.res({
 		image: <></>,
 		intents: [
+			<Button.AddCastAction action="/action">Install Cast ACtion</Button.AddCastAction>,
 			<Button action="/ticket/0x372d4633cae9edcfdea4c3f37dcd519de0c78d8f">
-				View Ticket
+				Test Ticket
 			</Button>,
 		],
 	});
@@ -203,7 +221,6 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	let channelId: string;
 
 	if (previousState.txHash && !previousState.indexed) {
-		console.log("checking tx");
 		const endpoint = `https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${transactionId}&apikey=${process.env.BASESCAN_API_KEY}`;
 		const res = await fetch(endpoint);
 
@@ -225,7 +242,6 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
-		console.log(transactionId, indexed);
 		if (castHash) previousState.castHash = castHash;
 		if (channelId) previousState.channelId = channelId;
 		if (indexed) previousState.indexed = true;
