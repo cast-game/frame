@@ -4,7 +4,6 @@ import {
 	getCast,
 	getChannel,
 	getUser,
-	getUsersFromAddresses,
 } from "./neynar.js";
 import { init, fetchQuery } from "@airstack/node";
 import { parseEther } from "viem";
@@ -17,8 +16,6 @@ interface TicketData {
 	socialCapitalValue: number;
 	buyPrice: number;
 	sellPrice: number;
-	topHoldersPfps: string[];
-	holdersCount: number;
 	supply: number;
 	ticketsOwned: number;
 }
@@ -70,10 +67,7 @@ export function getPrice(tier: number, supply: number): number {
 	return Math.ceil(pricePerShare);
 }
 
-export const getPriceForCast = async (
-	cast: Cast,
-	type: "buy" | "sell"
-) => {
+export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 	const ticketDetails = await queryData(`{
     ticket(id: "${cast.hash}") {
         activeTier
@@ -82,21 +76,21 @@ export const getPriceForCast = async (
         supply
     }}`);
 
-  let price;
+	let price;
 	if (!ticketDetails.ticket) {
 		const activeTier = await getActiveTier(cast.author.fid);
 
 		price = getPrice(activeTier, 0);
 	} else {
-    price = getPrice(
-      ticketDetails.ticket.activeTier,
-      type === "buy"
-        ? ticketDetails.ticket.supply + 1
-        : ticketDetails.ticket.supply - 1
-    );
-  }
+		price = getPrice(
+			ticketDetails.ticket.activeTier,
+			type === "buy"
+				? ticketDetails.ticket.supply + 1
+				: ticketDetails.ticket.supply - 1
+		);
+	}
 
-  return parseEther(price.toString());
+	return parseEther(price.toString());
 };
 
 export const getData = async (
@@ -132,51 +126,44 @@ export const getData = async (
 			socialCapitalValue,
 			buyPrice: startingPrice,
 			sellPrice: startingPrice,
-			topHoldersPfps: [],
-			holdersCount: 0,
 			supply: 0,
 			ticketsOwned: 0,
 		};
 	} else {
-
-    const [balance, channel, holders] = await Promise.all([
-      await queryData(`{
-        user(id: "${user.verifications[0].toLowerCase()}:${castHash}") {
+		const [balance, channel] = await Promise.all([
+			await queryData(`{
+        user(id: "${
+					user.verifications[0]?.toLowerCase() ?? "0x0"
+				}:${castHash}") {
             ticketBalance
         }
         }`),
-      await getChannel(cast.parent_url!),
-      await getUsersFromAddresses(ticketDetails.ticket.holders),
-    ]);
-  
-    const topHoldersPfps = Object.values(holders)
-      .flat()
-      .sort((a, b) => b.follower_count - a.follower_count)
-      .map((user) => user.pfp_url!);
-  
-    const buyPrice = getPrice(
-      ticketDetails.ticket.activeTier,
-      ticketDetails.ticket.supply
-    );
-    const sellPrice = getPrice(
-      ticketDetails.ticket.activeTier,
-      ticketDetails.ticket.supply - 1
-    );
-    const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
+			await getChannel(cast.parent_url!),
+		]);
 
-    const output = {
-      cast,
-      channel,
-      socialCapitalValue,
-      buyPrice,
-      sellPrice,
-      topHoldersPfps: topHoldersPfps.slice(0, 3),
-      holdersCount: ticketDetails.ticket.holders.length,
-      supply: ticketDetails.ticket.supply,
-      ticketsOwned,
-    }
-  
-    console.log(output)
-    return output;
-  }
+		const buyPrice = getPrice(
+			ticketDetails.ticket.activeTier,
+			ticketDetails.ticket.supply
+		);
+		const sellPrice = Math.ceil(
+			getPrice(
+				ticketDetails.ticket.activeTier,
+				ticketDetails.ticket.supply - 1
+			) * 0.8
+		);
+
+		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
+
+		const output = {
+			cast,
+			channel,
+			socialCapitalValue,
+			buyPrice,
+			sellPrice,
+			supply: ticketDetails.ticket.supply,
+			ticketsOwned,
+		};
+
+		return output;
+	}
 };
