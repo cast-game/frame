@@ -86,7 +86,9 @@ app.frame("/", (c) => {
 	return c.res({
 		image: <></>,
 		intents: [
-			<Button.AddCastAction action="/action">Install Cast ACtion</Button.AddCastAction>,
+			<Button.AddCastAction action="/action">
+				Install Cast Action
+			</Button.AddCastAction>,
 			<Button action="/ticket/0x372d4633cae9edcfdea4c3f37dcd519de0c78d8f">
 				Test Ticket
 			</Button>,
@@ -352,59 +354,62 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 							alignItems: "center",
 							fontSize: "3rem",
 							marginBottom: "4rem",
-							marginTop: "-1rem",
 						}}
 					>
 						<span>Social Capital Value</span>
 						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>✪ {socialCapitalValue}</span>
+							<span style={{ fontWeight: 600 }}>{socialCapitalValue}</span>
 						</div>
 					</div>
 					<div
-						style={{
-							display: "flex",
-							justifyContent: "space-between",
-							fontSize: "3rem",
-						}}
+						style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
 					>
-						<span>Buy Price</span>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>
-								{buyPrice} {tokenSymbol}
-							</span>
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "space-between",
+								fontSize: "3rem",
+							}}
+						>
+							<span>Buy Price</span>
+							<div style={{ display: "flex", alignItems: "center" }}>
+								<span style={{ fontWeight: 600 }}>
+									{buyPrice} {tokenSymbol}
+								</span>
+							</div>
 						</div>
-					</div>
-					<div
-						style={{
-							display: "flex",
-							justifyContent: "space-between",
-							fontSize: "3rem",
-						}}
-					>
-						<span>Sell Price</span>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>
-								{sellPrice} {tokenSymbol}
-							</span>
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "space-between",
+								fontSize: "3rem",
+							}}
+						>
+							<span>Sell Price</span>
+							<div style={{ display: "flex", alignItems: "center" }}>
+								<span style={{ fontWeight: 600 }}>
+									{sellPrice} {tokenSymbol}
+								</span>
+							</div>
 						</div>
-					</div>
-					<div
-						style={{
-							display: "flex",
-							width: "100%",
-							justifyContent: "space-between",
-						}}
-					>
-						<span>
-							Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
-						</span>
-						{ticketsOwned > 0 && (
+						<div
+							style={{
+								display: "flex",
+								width: "100%",
+								justifyContent: "space-between",
+							}}
+						>
 							<span>
-								You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
-								{ownershipPercentage}%)
+								Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
 							</span>
-						)}
-						{supply === 0 && <span>Buy for potential 2x reward!</span>}
+							{ticketsOwned > 0 && (
+								<span>
+									You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
+									{ownershipPercentage}%)
+								</span>
+							)}
+							{supply === 0 && <span>Buy for potential 2x reward!</span>}
+						</div>
 					</div>
 				</div>
 			</div>
