@@ -154,7 +154,7 @@ app.transaction("/sell", async (c) => {
 		}
 	}
 
-	const price = await getPriceForCast(cast, "buy");
+	const price = await getPriceForCast(cast, "sell");
 
 	const signature = await generateSignature(
 		castHash,
@@ -203,23 +203,35 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	let channelId: string;
 
 	if (previousState.txHash && !previousState.indexed) {
+		console.log("checking tx");
 		const endpoint = `https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${transactionId}&apikey=${process.env.BASESCAN_API_KEY}`;
 		const res = await fetch(endpoint);
 
 		const parsed = await res.json();
-		console.log(parsed);
 
 		if (parsed.status === "0") txError = true;
 		if (parsed.status === "1") indexed = true;
 	}
 
+	const {
+		cast,
+		channel,
+		socialCapitalValue,
+		buyPrice,
+		sellPrice,
+		supply,
+		ticketsOwned,
+	} = await getData(castHash, frameData.fid);
+
 	// @ts-ignore
 	const state = deriveState((previousState) => {
+		console.log(transactionId, indexed);
 		if (castHash) previousState.castHash = castHash;
 		if (channelId) previousState.channelId = channelId;
-		if (transactionId !== "0x") previousState.txHash = transactionId;
 		if (indexed) previousState.indexed = true;
 		if (txError) previousState.txError = true;
+		if (transactionId !== "0x" && transactionId !== undefined)
+			previousState.txHash = transactionId;
 		if (buttonValue === "return") {
 			previousState.indexed = false;
 			previousState.txHash = null;
@@ -276,18 +288,6 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 			);
 		}
 
-    const {
-      cast,
-      channel,
-      socialCapitalValue,
-      buyPrice,
-      sellPrice,
-      holdersCount,
-      topHoldersPfps,
-      supply,
-      ticketsOwned,
-    } = await getData(castHash, frameData.fid);
-
 		const ownershipPercentage = (ticketsOwned / supply) * 100;
 
 		return (
@@ -315,17 +315,14 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 				>
 					<div style={{ display: "flex", justifyContent: "space-between" }}>
 						<div style={{ display: "flex", alignItems: "center" }}>
-							{/* TODO: add pfp */}
-							{/* <span>Cast by {cast.author.username}</span> */}
 							<div
 								style={{
 									display: "flex",
 									alignItems: "center",
-									gap: ".7rem",
+									gap: "1rem",
 								}}
 							>
-								<span>Cast by</span>
-								<span>{cast.author.username}</span>
+								<span>Cast by @{cast.author.username}</span>
 							</div>
 						</div>
 						<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -336,13 +333,15 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
+							alignItems: "center",
 							fontSize: "3rem",
 							marginBottom: "4rem",
+							marginTop: "-1rem",
 						}}
 					>
 						<span>Social Capital Value</span>
 						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>{socialCapitalValue}</span>
+							<span style={{ fontWeight: 600 }}>✪ {socialCapitalValue}</span>
 						</div>
 					</div>
 					<div
@@ -352,7 +351,7 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 							fontSize: "3rem",
 						}}
 					>
-						<span>Ticket Price</span>
+						<span>Buy Price</span>
 						<div style={{ display: "flex", alignItems: "center" }}>
 							<span style={{ fontWeight: 600 }}>
 								{buyPrice} {tokenSymbol}
@@ -366,24 +365,11 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 							fontSize: "3rem",
 						}}
 					>
-						<span>Holders ({holdersCount.toString()})</span>
-						<div
-							style={{
-								display: "flex",
-								gap: ".5rem",
-								alignItems: "center",
-							}}
-						>
-							{topHoldersPfps.map((pfp: string) => (
-								<img
-									src={pfp}
-									style={{
-										width: "65px",
-										height: "65px",
-										borderRadius: "50%",
-									}}
-								/>
-							))}
+						<span>Sell Price</span>
+						<div style={{ display: "flex", alignItems: "center" }}>
+							<span style={{ fontWeight: 600 }}>
+								{sellPrice} {tokenSymbol}
+							</span>
 						</div>
 					</div>
 					<div
@@ -402,9 +388,7 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 								{ownershipPercentage}%)
 							</span>
 						)}
-            {supply === 0 && (
-              <span>Buy for potential 2x reward!</span>
-            )}
+						{supply === 0 && <span>Buy for potential 2x reward!</span>}
 					</div>
 				</div>
 			</div>
@@ -438,10 +422,17 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 		let buttons = [
 			<Button.Transaction target="/buy">Buy</Button.Transaction>,
-      <Button.Transaction target="/sell">Sell</Button.Transaction>,
 			<Button.Reset>Refresh</Button.Reset>,
 			<Button action={`/details/${channelId}`}>Game Details</Button>,
 		];
+
+		if (ticketsOwned > 0) {
+			buttons.splice(
+				1,
+				0,
+				<Button.Transaction target="/sell">Sell</Button.Transaction>
+			);
+		}
 
 		return buttons;
 	};
