@@ -7,6 +7,7 @@ import {
 	getUsersFromAddresses,
 } from "./neynar.js";
 import { init, fetchQuery } from "@airstack/node";
+import { parseEther } from "viem";
 
 init(process.env.AIRSTACK_API_KEY!);
 
@@ -37,27 +38,25 @@ const queryData = async (query: string) => {
 };
 
 export const getActiveTier = async (fid: number) => {
-  const meta = {
-    "x-dune-api-key": process.env.DUNE_API_KEY || "",
-  };
-  const header = new Headers(meta);
-  try {
-    const latest_response = await fetch(
-      `https://api.dune.com/api/v1/query/3418402/results?&filters=fid=${
-        fid
-      }`,
-      {
-        method: "GET",
-        headers: header,
-      }
-    );
+	const meta = {
+		"x-dune-api-key": process.env.DUNE_API_KEY || "",
+	};
+	const header = new Headers(meta);
+	try {
+		const latest_response = await fetch(
+			`https://api.dune.com/api/v1/query/3418402/results?&filters=fid=${fid}`,
+			{
+				method: "GET",
+				headers: header,
+			}
+		);
 
-    const body = await latest_response.text();
-    const recs = JSON.parse(body).result.rows[0];
-    return recs.fid_active_tier;
-  } catch (error) {
-    return 0;
-  }
+		const body = await latest_response.text();
+		const recs = JSON.parse(body).result.rows[0];
+		return recs.fid_active_tier;
+	} catch (error) {
+		return 0;
+	}
 };
 
 export function getPrice(tier: number, supply: number): number {
@@ -70,6 +69,35 @@ export function getPrice(tier: number, supply: number): number {
 
 	return Math.ceil(pricePerShare);
 }
+
+export const getPriceForCast = async (
+	cast: Cast,
+	type: "buy" | "sell"
+) => {
+	const ticketDetails = await queryData(`{
+    ticket(id: "${cast.hash}") {
+        activeTier
+        channelId
+        holders
+        supply
+    }}`);
+
+  let price;
+	if (!ticketDetails.ticket) {
+		const activeTier = await getActiveTier(cast.author.fid);
+
+		price = getPrice(activeTier, 0);
+	} else {
+    price = getPrice(
+      ticketDetails.ticket.activeTier,
+      type === "buy"
+        ? ticketDetails.ticket.supply + 1
+        : ticketDetails.ticket.supply - 1
+    );
+  }
+
+  return parseEther(price.toString());
+};
 
 export const getData = async (
 	castHash: string,
@@ -88,65 +116,67 @@ export const getData = async (
 		await fetchQuery(getSCVQuery(castHash)),
 	]);
 
-
-  const socialCapitalValue =
+	const socialCapitalValue =
 		scvResponse.data.FarcasterCasts.Cast[0].socialCapitalValue.formattedValue.toFixed(
 			2
 		);
 
 	if (!ticketDetails.ticket) {
 		const channel = await getChannel(cast.parent_url!);
-    const activeTier = await getActiveTier(fid);
-    const startingPrice = getPrice(activeTier, 0);
+		const activeTier = await getActiveTier(fid);
+		const startingPrice = getPrice(activeTier, 0);
 
 		return {
 			cast,
+			channel,
+			socialCapitalValue,
+			buyPrice: startingPrice,
+			sellPrice: startingPrice,
+			topHoldersPfps: [],
+			holdersCount: 0,
+			supply: 0,
+			ticketsOwned: 0,
+		};
+	} else {
+
+    const [balance, channel, holders] = await Promise.all([
+      await queryData(`{
+        user(id: "${user.verifications[0].toLowerCase()}:${castHash}") {
+            ticketBalance
+        }
+        }`),
+      await getChannel(cast.parent_url!),
+      await getUsersFromAddresses(ticketDetails.ticket.holders),
+    ]);
+  
+    const topHoldersPfps = Object.values(holders)
+      .flat()
+      .sort((a, b) => b.follower_count - a.follower_count)
+      .map((user) => user.pfp_url!);
+  
+    const buyPrice = getPrice(
+      ticketDetails.ticket.activeTier,
+      ticketDetails.ticket.supply
+    );
+    const sellPrice = getPrice(
+      ticketDetails.ticket.activeTier,
+      ticketDetails.ticket.supply - 1
+    );
+    const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
+
+    const output = {
+      cast,
       channel,
       socialCapitalValue,
-      buyPrice: startingPrice,
-      sellPrice: startingPrice,
-      topHoldersPfps: [],
-      holdersCount: 0,
-      supply: 0,
-      ticketsOwned: 0,
-		};
-	}
-
-	const [balance, channel, holders] = await Promise.all([
-		await queryData(`{
-			users(id: "${user.verifications[0]}:${castHash}) {
-					ticketBalance
-			}
-			}`),
-		await getChannel(cast.parent_url!),
-		await getUsersFromAddresses(ticketDetails.ticket.holders),
-	]);
-
-	const topHoldersPfps = Object.values(holders)
-		.flat()
-		.sort((a, b) => b.follower_count - a.follower_count)
-		.map((user) => user.pfp_url!);
-
-	
-
-	const buyPrice = getPrice(
-		ticketDetails.ticket.activeTier,
-		ticketDetails.ticket.supply + 1
-	);
-	const sellPrice = getPrice(
-		ticketDetails.ticket.activeTier,
-		ticketDetails.ticket.supply - 1
-	);
-
-	return {
-		cast,
-		channel,
-		socialCapitalValue,
-		buyPrice,
-		sellPrice,
-		topHoldersPfps,
-		holdersCount: ticketDetails.ticket.holders.length,
-		supply: ticketDetails.ticket.supply,
-		ticketsOwned: balance.data.user.ticketBalance,
-	};
+      buyPrice,
+      sellPrice,
+      topHoldersPfps: topHoldersPfps.slice(0, 3),
+      holdersCount: ticketDetails.ticket.holders.length,
+      supply: ticketDetails.ticket.supply,
+      ticketsOwned,
+    }
+  
+    console.log(output)
+    return output;
+  }
 };
