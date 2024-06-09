@@ -2,7 +2,6 @@ import { apiEndpoint, priceTiers } from "./constants.js";
 import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { getCast, getChannel, getUser } from "./neynar.js";
 import { parseEther } from "viem";
-import { getPrizePool } from "./contract.js";
 
 interface TicketData {
 	author: string;
@@ -11,7 +10,6 @@ interface TicketData {
 	sellPrice: number;
 	supply: number;
 	ticketsOwned: number;
-	prizePool: number;
 }
 
 const queryData = async (query: string) => {
@@ -91,7 +89,7 @@ export const getData = async (
 	castHash: string,
 	fid: number
 ): Promise<TicketData> => {
-	const [user, cast, ticketDetails, prizePool] = await Promise.all([
+	const [user, cast, ticketDetails] = await Promise.all([
 		await getUser(fid),
 		await getCast(castHash),
 		await queryData(`{
@@ -101,10 +99,7 @@ export const getData = async (
         holders
         supply
     }}`),
-		getPrizePool(),
 	]);
-
-	console.log(prizePool);
 
 	if (!ticketDetails.ticket) {
 		const channel = await getChannel(cast.parent_url!);
@@ -118,7 +113,6 @@ export const getData = async (
 			sellPrice: startingPrice,
 			supply: 0,
 			ticketsOwned: 0,
-			prizePool: 0,
 		};
 	} else {
 		const [balance, channel] = await Promise.all([
@@ -152,7 +146,6 @@ export const getData = async (
 			sellPrice,
 			supply: ticketDetails.ticket.supply,
 			ticketsOwned,
-			prizePool: 0
 		};
 	}
 };
