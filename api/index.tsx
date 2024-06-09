@@ -220,7 +220,6 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	const tokenSymbol = "DEGEN";
 	let indexed: boolean;
 	let txError: boolean;
-	let channelId: string;
 
 	if (previousState.txHash && !previousState.indexed) {
 		const endpoint = `https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${transactionId}&apikey=${process.env.BASESCAN_API_KEY}`;
@@ -232,20 +231,12 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 		if (parsed.status === "1") indexed = true;
 	}
 
-	const {
-		cast,
-		channel,
-		socialCapitalValue,
-		buyPrice,
-		sellPrice,
-		supply,
-		ticketsOwned,
-	} = await getData(castHash, frameData.fid);
+	const { author, channelId, buyPrice, sellPrice, supply, ticketsOwned } =
+		await getData(castHash, frameData.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
 		if (castHash) previousState.castHash = castHash;
-		if (channelId) previousState.channelId = channelId;
 		if (indexed) previousState.indexed = true;
 		if (txError) previousState.txError = true;
 		if (transactionId !== "0x" && transactionId !== undefined)
@@ -260,50 +251,11 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	const getImage = async () => {
 		if (state.txHash) {
 			if (state.indexed) {
-				return (
-					<div
-						style={{
-							display: "flex",
-						}}
-					>
-						<img
-							src={`${process.env.BASE_URL}/tx-success.png`}
-							style={{
-								position: "absolute",
-							}}
-						/>
-					</div>
-				);
+				return `${process.env.BASE_URL}/tx-success.png`;
 			} else if (state.txError) {
-				return (
-					<div
-						style={{
-							display: "flex",
-						}}
-					>
-						<img
-							src={`${process.env.BASE_URL}/tx-failed.png`}
-							style={{
-								position: "absolute",
-							}}
-						/>
-					</div>
-				);
+				return `${process.env.BASE_URL}/tx-failed.png`;
 			}
-			return (
-				<div
-					style={{
-						display: "flex",
-					}}
-				>
-					<img
-						src={`${process.env.BASE_URL}/tx-pending.png`}
-						style={{
-							position: "absolute",
-						}}
-					/>
-				</div>
-			);
+			return `${process.env.BASE_URL}/tx-pending.png`;
 		}
 
 		const ownershipPercentage = (ticketsOwned / supply) * 100;
@@ -325,13 +277,21 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 						display: "flex",
 						flexDirection: "column",
 						width: "100%",
+						height: "100vh",
 						padding: "4.8rem 5.5rem",
 						fontSize: "2.5rem",
 						gap: "2rem",
+						alignItems: "center",
 						position: "relative",
 					}}
 				>
-					<div style={{ display: "flex", justifyContent: "space-between" }}>
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							width: "100%",
+						}}
+					>
 						<div style={{ display: "flex", alignItems: "center" }}>
 							<div
 								style={{
@@ -340,11 +300,11 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 									gap: "1rem",
 								}}
 							>
-								<span>Cast by @{cast.author.username}</span>
+								<span>Cast by @{author}</span>
 							</div>
 						</div>
 						<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-							<span>/{channel.id}</span>
+							<span>/{channelId}</span>
 						</div>
 					</div>
 					<div
@@ -353,16 +313,23 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 							justifyContent: "space-between",
 							alignItems: "center",
 							fontSize: "3rem",
-							marginBottom: "4rem",
+							width: "100%",
 						}}
 					>
 						<span>Social Capital Value</span>
 						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>{socialCapitalValue}</span>
+							<span style={{ fontWeight: 600 }}>-</span>
 						</div>
 					</div>
 					<div
-						style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
+						style={{
+							display: "flex",
+							flexDirection: "column",
+							gap: "2rem",
+							width: "100%",
+							position: "absolute",
+							bottom: "4.5rem",
+						}}
 					>
 						<div
 							style={{
