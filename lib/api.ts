@@ -1,23 +1,17 @@
-import { apiEndpoint, getSCVQuery, priceTiers } from "./constants.js";
-import { Cast, Channel } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
-import {
-	getCast,
-	getChannel,
-	getUser,
-} from "./neynar.js";
-import { init, fetchQuery } from "@airstack/node";
+import { apiEndpoint, priceTiers } from "./constants.js";
+import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
+import { getCast, getChannel, getUser } from "./neynar.js";
 import { parseEther } from "viem";
-
-init(process.env.AIRSTACK_API_KEY!);
+import { getPrizePool } from "./contract.js";
 
 interface TicketData {
-	cast: Cast;
-	channel: Channel;
-	socialCapitalValue: number;
+	author: string;
+	channelId: string;
 	buyPrice: number;
 	sellPrice: number;
 	supply: number;
 	ticketsOwned: number;
+	prizePool: number;
 }
 
 const queryData = async (query: string) => {
@@ -97,7 +91,7 @@ export const getData = async (
 	castHash: string,
 	fid: number
 ): Promise<TicketData> => {
-	const [user, cast, ticketDetails, scvResponse] = await Promise.all([
+	const [user, cast, ticketDetails, prizePool] = await Promise.all([
 		await getUser(fid),
 		await getCast(castHash),
 		await queryData(`{
@@ -107,13 +101,10 @@ export const getData = async (
         holders
         supply
     }}`),
-		await fetchQuery(getSCVQuery(castHash)),
+		getPrizePool(),
 	]);
 
-	const socialCapitalValue =
-		scvResponse.data.FarcasterCasts.Cast[0].socialCapitalValue.formattedValue.toFixed(
-			2
-		);
+	console.log(prizePool);
 
 	if (!ticketDetails.ticket) {
 		const channel = await getChannel(cast.parent_url!);
@@ -121,13 +112,13 @@ export const getData = async (
 		const startingPrice = getPrice(activeTier, 0);
 
 		return {
-			cast,
-			channel,
-			socialCapitalValue,
+			author: cast.author.username,
+			channelId: channel.id,
 			buyPrice: startingPrice,
 			sellPrice: startingPrice,
 			supply: 0,
 			ticketsOwned: 0,
+			prizePool: 0,
 		};
 	} else {
 		const [balance, channel] = await Promise.all([
@@ -154,16 +145,14 @@ export const getData = async (
 
 		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
 
-		const output = {
-			cast,
-			channel,
-			socialCapitalValue,
+		return {
+			author: cast.author.username,
+			channelId: channel.id,
 			buyPrice,
 			sellPrice,
 			supply: ticketDetails.ticket.supply,
 			ticketsOwned,
+			prizePool: 0
 		};
-
-		return output;
 	}
 };
