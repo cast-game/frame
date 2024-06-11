@@ -1,6 +1,6 @@
 import { apiEndpoint, priceTiers } from "./constants.js";
-import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
-import { getCast, getChannel, getUser } from "./neynar.js";
+import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
+import { getChannel, getUser } from "./neynar.js";
 import { parseEther } from "viem";
 
 interface TicketData {
@@ -125,7 +125,7 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
 			getPrice(
 				ticketDetails.ticket.activeTier,
 				ticketDetails.ticket.supply - 1
-			) * 0.8
+			) * .8
 		);
 
 		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
@@ -134,7 +134,7 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
 			author: cast.author.username,
 			channelId: channel.id,
 			buyPrice,
-			sellPrice,
+			sellPrice: Math.ceil(sellPrice * .8),
 			supply: ticketDetails.ticket.supply,
 			ticketsOwned,
 		};
