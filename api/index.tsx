@@ -211,7 +211,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 	}
 
 	const { author, channelId, buyPrice, sellPrice, supply, ticketsOwned } =
-		await getData(c.var.cast, frameData.fid);
+		await getData(c.var.cast, c.var.interactor.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
