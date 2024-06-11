@@ -5,7 +5,6 @@ import { neynar as neynarHub } from "frog/hubs";
 import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
 import { chainId, gameAddress, tokenSymbol } from "../lib/constants.js";
-import { getCast } from "../lib/neynar.js";
 import { gameAbi } from "../lib/abis.js";
 import { zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
@@ -16,8 +15,6 @@ import { getData, getPriceForCast } from "../lib/api.js";
 // }
 
 type State = {
-	castHash: string | null;
-	channelId: string | null;
 	txHash: string | null;
 	indexed: boolean;
 	txError: boolean;
@@ -33,12 +30,14 @@ export const app = new Frog<State>({
 	assetsPath: "/",
 	basePath: "/api",
 	initialState: {
-		castHash: null,
-		channelId: null,
 		txHash: null,
 		indexed: false,
 		txError: false,
 	},
+	// Supply a Hub to enable frame verification.
+	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
+	verify: "silent",
+	secret: process.env.FROG_SECRET,
 	imageOptions: {
 		fonts: [
 			{
@@ -58,10 +57,6 @@ export const app = new Frog<State>({
 			},
 		],
 	},
-	// Supply a Hub to enable frame verification.
-	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
-	verify: "silent",
-	secret: process.env.FROG_SECRET
 }) as any;
 
 app.castAction(
@@ -82,65 +77,44 @@ app.castAction(
 );
 
 // @ts-ignore
-// TODO: ideally remove or replace with cover
-app.frame("/", (c) => {
-	return c.res({
-		image: <></>,
-		intents: [
-			<Button.AddCastAction action="/action">
-				Install Cast Action
-			</Button.AddCastAction>,
-			<Button action="/ticket">
-				Cast Ticket
-			</Button>
-		],
-	});
-});
-
-// @ts-ignore
-app.transaction("/buy", async (c) => {
-	const {
-		previousState: { castHash },
-		frameData,
-	} = c;
-
-	const cast = await getCast(castHash);
-
+app.transaction("/buy", neynarMiddleware, async (c) => {
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
-	if (
-		![castHash, "0x0000000000000000000000000000000000000000"].includes(
-			frameData.castId.hash
-		)
-	) {
-		const referralCast = await getCast(frameData.castId.hash);
-		if (referralCast.author.fid !== cast.author.fid) {
-			referrer =
-				referralCast.author.verified_addresses.eth_addresses[0] ??
-				referralCast.author.custody_address;
-		}
-	}
+	const cast = c.var.cast;
+	// if (
+	// 	![castHash, "0x0000000000000000000000000000000000000000"].includes(
+	// 		frameData.castId.hash
+	// 	)
+	// ) {
+	// 	const referralCast = await getCast(frameData.castId.hash);
+	// 	if (referralCast.author.fid !== cast.author.fid) {
+	// 		referrer =
+	// 			referralCast.author.verified_addresses.eth_addresses[0] ??
+	// 			referralCast.author.custody_address;
+	// 	}
+	// }
 
-	const price = await getPriceForCast(cast, "buy");
+	const price = await getPriceForCast(c.var.cast, "buy");
 
 	const signature = await generateSignature(
-		castHash,
-		cast.author.verified_addresses.eth_addresses[0] ??
-			cast.author.custody_address,
+		cast.hash,
+		cast.author.verifiedAddresses.ethAddresses[0] ??
+			cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer
 	);
 
 	const args = [
-		castHash,
-		cast.author.verified_addresses.eth_addresses[0] ??
-			cast.author.custody_address,
+		cast.hash,
+		cast.author.verifiedAddresses.ethAddresses[0] ??
+			cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer,
 		signature,
 	];
+
 
 	return c.contract({
 		abi: gameAbi,
@@ -152,44 +126,38 @@ app.transaction("/buy", async (c) => {
 });
 
 // @ts-ignore
-app.transaction("/sell", async (c) => {
-	const {
-		previousState: { castHash },
-		frameData,
-	} = c;
-
-	const cast = await getCast(castHash);
-
+app.transaction("/sell", neynarMiddleware, async (c) => {
 	// Check if the frame is a cast
+	const cast = c.var.cast;
 	let referrer: string = zeroAddress;
-	if (
-		![castHash, "0x0000000000000000000000000000000000000000"].includes(
-			frameData.castId.hash
-		)
-	) {
-		const referralCast = await getCast(frameData.castId.hash);
-		if (referralCast.author.fid !== cast.author.fid) {
-			referrer =
-				referralCast.author.verified_addresses.eth_addresses[0] ??
-				referralCast.author.custody_address;
-		}
-	}
+	// if (
+	// 	![castHash, "0x0000000000000000000000000000000000000000"].includes(
+	// 		frameData.castId.hash
+	// 	)
+	// ) {
+	// 	const referralCast = await getCast(frameData.castId.hash);
+	// 	if (referralCast.author.fid !== cast.author.fid) {
+	// 		referrer =
+	// 			referralCast.author.verified_addresses.eth_addresses[0] ??
+	// 			referralCast.author.custody_address;
+	// 	}
+	// }
 
 	const price = await getPriceForCast(cast, "sell");
 
 	const signature = await generateSignature(
-		castHash,
-		cast.author.verified_addresses.eth_addresses[0] ??
-			cast.author.custody_address,
+		cast.hash,
+		cast.author.verifiedAddresses.ethAddresses[0] ??
+			cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer
 	);
 
 	const args = [
-		castHash,
-		cast.author.verified_addresses.eth_addresses[0] ??
-			cast.author.custody_address,
+		cast.hash,
+		cast.author.verifiedAddresses.ethAddresses[0] ??
+			cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer,
@@ -206,6 +174,20 @@ app.transaction("/sell", async (c) => {
 });
 
 // @ts-ignore
+// TODO: ideally remove or replace with cover
+app.frame("/", (c) => {
+	return c.res({
+		image: <></>,
+		intents: [
+			<Button.AddCastAction action="/action">
+				Install Action
+			</Button.AddCastAction>,
+			<Button action="/ticket">Ticket</Button>,
+		],
+	});
+});
+
+// @ts-ignore
 app.frame("/ticket", neynarMiddleware, async (c) => {
 	const {
 		deriveState,
@@ -215,7 +197,6 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 		frameData,
 	}: any = c;
 
-	const castHash = frameData.castId.hash;
 	let indexed: boolean;
 	let txError: boolean;
 
@@ -230,11 +211,10 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 	}
 
 	const { author, channelId, buyPrice, sellPrice, supply, ticketsOwned } =
-		await getData(castHash, frameData.fid);
+		await getData(c.var.cast, frameData.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
-		if (castHash) previousState.castHash = castHash;
 		if (indexed) previousState.indexed = true;
 		if (txError) previousState.txError = true;
 		if (transactionId !== "0x" && transactionId !== undefined)
