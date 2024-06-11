@@ -4,7 +4,7 @@ import { serveStatic } from "frog/serve-static";
 import { neynar as neynarHub } from "frog/hubs";
 import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
-import { chainId, gameAddress } from "../lib/constants.js";
+import { chainId, gameAddress, tokenSymbol } from "../lib/constants.js";
 import { getCast } from "../lib/neynar.js";
 import { gameAbi } from "../lib/abis.js";
 import { zeroAddress } from "viem";
@@ -61,6 +61,7 @@ export const app = new Frog<State>({
 	// Supply a Hub to enable frame verification.
 	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
 	verify: "silent",
+	secret: process.env.FROG_SECRET
 }) as any;
 
 app.castAction(
@@ -89,9 +90,6 @@ app.frame("/", (c) => {
 			<Button.AddCastAction action="/action">
 				Install Cast Action
 			</Button.AddCastAction>,
-			<Button action="/ticket/0x372d4633cae9edcfdea4c3f37dcd519de0c78d8f">
-				Test Ticket
-			</Button>,
 			<Button action="/ticket">
 				Cast Ticket
 			</Button>
@@ -218,234 +216,6 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 	}: any = c;
 
 	const castHash = frameData.castId.hash;
-	const tokenSymbol = "DEGEN";
-	let indexed: boolean;
-	let txError: boolean;
-
-	if (previousState.txHash && !previousState.indexed) {
-		const endpoint = `https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${transactionId}&apikey=${process.env.BASESCAN_API_KEY}`;
-		const res = await fetch(endpoint);
-
-		const parsed = await res.json();
-
-		if (parsed.status === "0") txError = true;
-		if (parsed.status === "1") indexed = true;
-	}
-
-	const { author, channelId, buyPrice, sellPrice, supply, ticketsOwned } =
-		await getData(castHash, frameData.fid);
-
-	// @ts-ignore
-	const state = deriveState((previousState) => {
-		if (castHash) previousState.castHash = castHash;
-		if (indexed) previousState.indexed = true;
-		if (txError) previousState.txError = true;
-		if (transactionId !== "0x" && transactionId !== undefined)
-			previousState.txHash = transactionId;
-		if (buttonValue === "return") {
-			previousState.indexed = false;
-			previousState.txHash = null;
-			previousState.txError = false;
-		}
-	});
-
-	const getImage = async () => {
-		if (state.txHash) {
-			if (state.indexed) {
-				return `${process.env.BASE_URL}/tx-success.png`;
-			} else if (state.txError) {
-				return `${process.env.BASE_URL}/tx-failed.png`;
-			}
-			return `${process.env.BASE_URL}/tx-pending.png`;
-		}
-
-		const ownershipPercentage = (ticketsOwned / supply) * 100;
-
-		return (
-			<div
-				style={{
-					display: "flex",
-				}}
-			>
-				<img
-					src={`${process.env.BASE_URL}/ticket-bg.png`}
-					style={{
-						position: "absolute",
-					}}
-				/>
-				<div
-					style={{
-						display: "flex",
-						flexDirection: "column",
-						width: "100%",
-						height: "100vh",
-						padding: "4.8rem 5.5rem",
-						fontSize: "2.5rem",
-						gap: "2rem",
-						alignItems: "center",
-						position: "relative",
-					}}
-				>
-					<div
-						style={{
-							display: "flex",
-							justifyContent: "space-between",
-							width: "100%",
-						}}
-					>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							<div
-								style={{
-									display: "flex",
-									alignItems: "center",
-									gap: "1rem",
-								}}
-							>
-								<span>Cast by @{author}</span>
-							</div>
-						</div>
-						<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-							<span>/{channelId}</span>
-						</div>
-					</div>
-					<div
-						style={{
-							display: "flex",
-							justifyContent: "space-between",
-							alignItems: "center",
-							fontSize: "3rem",
-							width: "100%",
-						}}
-					>
-						<span>Social Capital Value</span>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>-</span>
-						</div>
-					</div>
-					<div
-						style={{
-							display: "flex",
-							flexDirection: "column",
-							gap: "2rem",
-							width: "100%",
-							position: "absolute",
-							bottom: "4.5rem",
-						}}
-					>
-						<div
-							style={{
-								display: "flex",
-								justifyContent: "space-between",
-								fontSize: "3rem",
-							}}
-						>
-							<span>Buy Price</span>
-							<div style={{ display: "flex", alignItems: "center" }}>
-								<span style={{ fontWeight: 600 }}>
-									{buyPrice} {tokenSymbol}
-								</span>
-							</div>
-						</div>
-						<div
-							style={{
-								display: "flex",
-								justifyContent: "space-between",
-								fontSize: "3rem",
-							}}
-						>
-							<span>Sell Price</span>
-							<div style={{ display: "flex", alignItems: "center" }}>
-								<span style={{ fontWeight: 600 }}>
-									{sellPrice} {tokenSymbol}
-								</span>
-							</div>
-						</div>
-						<div
-							style={{
-								display: "flex",
-								width: "100%",
-								justifyContent: "space-between",
-							}}
-						>
-							<span>
-								Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
-							</span>
-							{ticketsOwned > 0 && (
-								<span>
-									You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
-									{ownershipPercentage}%)
-								</span>
-							)}
-							{supply === 0 && <span>Buy for potential 2x reward!</span>}
-						</div>
-					</div>
-				</div>
-			</div>
-		);
-	};
-
-	const getIntents = () => {
-		if (state.txHash) {
-			if (state.indexed) {
-				return [
-					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
-						View
-					</Button.Link>,
-					<Button value="return">Done</Button>,
-				];
-			} else if (state.txError) {
-				return [
-					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
-						View
-					</Button.Link>,
-					<Button value="return">Try again</Button>,
-				];
-			}
-			return [
-				<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
-					View Transaction
-				</Button.Link>,
-				<Button value="refresh">Refresh</Button>,
-			];
-		}
-
-		let buttons = [
-			<Button.Transaction target="/buy">Buy</Button.Transaction>,
-			<Button.Reset>Refresh</Button.Reset>,
-			<Button action={`/details/${channelId}`}>Game Details</Button>,
-		];
-
-		if (ticketsOwned > 0) {
-			buttons.splice(
-				1,
-				0,
-				<Button.Transaction target="/sell">Sell</Button.Transaction>
-			);
-		}
-
-		return buttons;
-	};
-
-	return c.res({
-		image: getImage(),
-		intents: getIntents(),
-	});
-});
-
-// @ts-ignore
-app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
-	const {
-		req,
-		deriveState,
-		previousState,
-		transactionId,
-		buttonValue,
-		frameData,
-	}: any = c;
-
-	const castHash = req.path.split("/")[req.path.split("/").length - 1];
-
-	const tokenSymbol = "DEGEN";
 	let indexed: boolean;
 	let txError: boolean;
 
