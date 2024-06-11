@@ -404,7 +404,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 	};
 
 	return c.res({
-		image: getImage(),
+		image: await getImage(),
 		intents: getIntents(),
 	});
 });
