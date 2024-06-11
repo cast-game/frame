@@ -4,6 +4,8 @@ export const useMainnet = process.env.USE_MAINNET === "true";
 export const chain = useMainnet ? base : baseSepolia;
 export const chainId = useMainnet ? "eip155:8453" : "eip155:84532";
 
+export const tokenSymbol = "DEGEN";
+
 export const ticketsAddress = "0xd51cb2fbe71502f0830e9d3a3bd1d90807dc12c6";
 // TODO: prob move to db
 export const gameAddress = "0x116affed0a9e9dfb5ee4dd769a8b8a2a476f9927";
