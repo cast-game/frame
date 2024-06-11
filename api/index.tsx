@@ -4,7 +4,13 @@ import { serveStatic } from "frog/serve-static";
 import { neynar as neynarHub } from "frog/hubs";
 import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
-import { assetsIpfsHash, chainId, gameAddress, ipfsGateway, tokenSymbol } from "../lib/constants.js";
+import {
+	assetsIpfsHash,
+	chainId,
+	gameAddress,
+	ipfsGateway,
+	tokenSymbol,
+} from "../lib/constants.js";
 import { gameAbi } from "../lib/abis.js";
 import { zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
@@ -68,8 +74,7 @@ app.castAction(
 				c.actionData.fid
 			}`
 		);
-		return c.res({
-			type: "frame",
+		return c.frame({
 			path: `/ticket`,
 		});
 	},
@@ -98,8 +103,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 
 	const signature = await generateSignature(
 		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ??
-			cast.author.custodyAddress,
+		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer
@@ -107,14 +111,12 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 
 	const args = [
 		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ??
-			cast.author.custodyAddress,
+		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer,
 		signature,
 	];
-
 
 	return c.contract({
 		abi: gameAbi,
@@ -147,8 +149,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 
 	const signature = await generateSignature(
 		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ??
-			cast.author.custodyAddress,
+		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer
@@ -156,8 +157,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 
 	const args = [
 		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ??
-			cast.author.custodyAddress,
+		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
 		BigInt(1),
 		price,
 		referrer,
@@ -189,13 +189,7 @@ app.frame("/", (c) => {
 
 // @ts-ignore
 app.frame("/ticket", neynarMiddleware, async (c) => {
-	const {
-		deriveState,
-		previousState,
-		transactionId,
-		buttonValue,
-		frameData,
-	}: any = c;
+	const { deriveState, previousState, transactionId, buttonValue }: any = c;
 
 	let indexed: boolean;
 	let txError: boolean;
@@ -230,49 +224,49 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 		if (state.txHash) {
 			if (state.indexed) {
 				return (
-          <div
-            style={{
-              display: "flex",
-            }}
-          >
-            <img
-              src={`${ipfsGateway}/${assetsIpfsHash}/tx-success.png`}
-              style={{
-                position: "absolute",
-              }}
-            />
-          </div>
-        );
+					<div
+						style={{
+							display: "flex",
+						}}
+					>
+						<img
+							src={`${ipfsGateway}/${assetsIpfsHash}/tx-success.png`}
+							style={{
+								position: "absolute",
+							}}
+						/>
+					</div>
+				);
 			} else if (state.txError) {
 				return (
-          <div
-            style={{
-              display: "flex",
-            }}
-          >
-            <img
-              src={`${ipfsGateway}/${assetsIpfsHash}/tx-failed.png`}
-              style={{
-                position: "absolute",
-              }}
-            />
-          </div>
-        );
+					<div
+						style={{
+							display: "flex",
+						}}
+					>
+						<img
+							src={`${ipfsGateway}/${assetsIpfsHash}/tx-failed.png`}
+							style={{
+								position: "absolute",
+							}}
+						/>
+					</div>
+				);
 			}
 			return (
-        <div
-          style={{
-            display: "flex",
-          }}
-        >
-          <img
-            src={`${ipfsGateway}/${assetsIpfsHash}/tx-pending.png`}
-            style={{
-              position: "absolute",
-            }}
-          />
-        </div>
-      );
+				<div
+					style={{
+						display: "flex",
+					}}
+				>
+					<img
+						src={`${ipfsGateway}/${assetsIpfsHash}/tx-pending.png`}
+						style={{
+							position: "absolute",
+						}}
+					/>
+				</div>
+			);
 		}
 
 		const ownershipPercentage = (ticketsOwned / supply) * 100;
@@ -281,119 +275,108 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 			<div
 				style={{
 					display: "flex",
+					backgroundImage: `url(${ipfsGateway}/${assetsIpfsHash}/ticket-bg.png)`,
+					flexDirection: "column",
+					width: "100%",
+					height: "100vh",
+					padding: "4.8rem 5.5rem",
+					fontSize: "2.5rem",
+					gap: "2rem",
+					alignItems: "center",
+					position: "relative",
 				}}
 			>
-				<img
-					src={`${ipfsGateway}/${assetsIpfsHash}/ticket-bg.png`}
+				<div
 					style={{
-						position: "absolute",
+						display: "flex",
+						justifyContent: "space-between",
+						width: "100%",
 					}}
-				/>
+				>
+					<div style={{ display: "flex", alignItems: "center" }}>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "1rem",
+							}}
+						>
+							<span>Cast by @{author}</span>
+						</div>
+					</div>
+					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+						<span>/{channelId}</span>
+					</div>
+				</div>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+						fontSize: "3rem",
+						width: "100%",
+					}}
+				>
+					<span>Social Capital Value</span>
+					<div style={{ display: "flex", alignItems: "center" }}>
+						<span style={{ fontWeight: 600 }}>-</span>
+					</div>
+				</div>
 				<div
 					style={{
 						display: "flex",
 						flexDirection: "column",
-						width: "100%",
-						height: "100vh",
-						padding: "4.8rem 5.5rem",
-						fontSize: "2.5rem",
 						gap: "2rem",
-						alignItems: "center",
-						position: "relative",
+						width: "100%",
+						position: "absolute",
+						bottom: "4.5rem",
 					}}
 				>
 					<div
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							width: "100%",
+							fontSize: "3rem",
 						}}
 					>
+						<span>Buy Price</span>
 						<div style={{ display: "flex", alignItems: "center" }}>
-							<div
-								style={{
-									display: "flex",
-									alignItems: "center",
-									gap: "1rem",
-								}}
-							>
-								<span>Cast by @{author}</span>
-							</div>
-						</div>
-						<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-							<span>/{channelId}</span>
+							<span style={{ fontWeight: 600 }}>
+								{buyPrice} {tokenSymbol}
+							</span>
 						</div>
 					</div>
 					<div
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							alignItems: "center",
 							fontSize: "3rem",
-							width: "100%",
 						}}
 					>
-						<span>Social Capital Value</span>
+						<span>Sell Price</span>
 						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>-</span>
+							<span style={{ fontWeight: 600 }}>
+								{sellPrice} {tokenSymbol}
+							</span>
 						</div>
 					</div>
 					<div
 						style={{
 							display: "flex",
-							flexDirection: "column",
-							gap: "2rem",
 							width: "100%",
-							position: "absolute",
-							bottom: "4.5rem",
+							justifyContent: "space-between",
 						}}
 					>
-						<div
-							style={{
-								display: "flex",
-								justifyContent: "space-between",
-								fontSize: "3rem",
-							}}
-						>
-							<span>Buy Price</span>
-							<div style={{ display: "flex", alignItems: "center" }}>
-								<span style={{ fontWeight: 600 }}>
-									{buyPrice} {tokenSymbol}
-								</span>
-							</div>
-						</div>
-						<div
-							style={{
-								display: "flex",
-								justifyContent: "space-between",
-								fontSize: "3rem",
-							}}
-						>
-							<span>Sell Price</span>
-							<div style={{ display: "flex", alignItems: "center" }}>
-								<span style={{ fontWeight: 600 }}>
-									{sellPrice} {tokenSymbol}
-								</span>
-							</div>
-						</div>
-						<div
-							style={{
-								display: "flex",
-								width: "100%",
-								justifyContent: "space-between",
-							}}
-						>
+						<span>
+							Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
+						</span>
+						{ticketsOwned > 0 && (
 							<span>
-								Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
+								You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
+								{ownershipPercentage}%)
 							</span>
-							{ticketsOwned > 0 && (
-								<span>
-									You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
-									{ownershipPercentage}%)
-								</span>
-							)}
-							{supply === 0 && <span>Buy for potential 2x reward!</span>}
-						</div>
+						)}
+						{supply === 0 && <span>Buy for potential 2x reward!</span>}
 					</div>
 				</div>
 			</div>
@@ -444,6 +427,10 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 
 	return c.res({
 		image: await getImage(),
+		imageOptions: {
+			width: 1528,
+			height: 800,
+		},
 		intents: getIntents(),
 	});
 });
