@@ -26,21 +26,21 @@ const queryData = async (query: string) => {
 	return data;
 };
 
-export const getActiveTier = (user: User) => {
+export const getActiveTier = (user: any) => {
 	let tier;
-	if (user.follower_count < 400) {
+	if (user.followerCount < 400) {
 		tier = 0;
-	} else if (user.follower_count > 400 && user.follower_count < 1000) {
+	} else if (user.followerCount > 400 && user.followerCount < 1000) {
 		tier = 1;
-	} else if (user.follower_count > 1000 && user.follower_count < 10000) {
+	} else if (user.followerCount > 1000 && user.followerCount < 10000) {
 		tier = 2;
-	} else if (user.follower_count > 10000 && user.follower_count < 50000) {
+	} else if (user.followerCount > 10000 && user.followerCount < 50000) {
 		tier = 3;
 	} else {
 		tier = 4;
 	}
 
-	if (!user.power_badge && tier > 0) tier--;
+	if (!user.powerBadge && tier > 0) tier--;
 	return tier;
 };
 
@@ -67,7 +67,6 @@ export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 	let price;
 	if (!ticketDetails.ticket) {
 		const activeTier = getActiveTier(cast.author);
-
 		price = getPrice(activeTier, 0);
 	} else {
 		price = getPrice(
@@ -81,15 +80,11 @@ export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 	return parseEther(price.toString());
 };
 
-export const getData = async (
-	castHash: string,
-	fid: number
-): Promise<TicketData> => {
-	const [user, cast, ticketDetails] = await Promise.all([
+export const getData = async (cast: any, fid: number): Promise<TicketData> => {
+	const [user, ticketDetails] = await Promise.all([
 		await getUser(fid),
-		await getCast(castHash),
 		await queryData(`{
-    ticket(id: "${castHash}") {
+    ticket(id: "${cast.hash}") {
         activeTier
         channelId
         holders
@@ -98,8 +93,8 @@ export const getData = async (
 	]);
 
 	if (!ticketDetails.ticket) {
-		const channel = await getChannel(cast.parent_url!);
-		const activeTier = getActiveTier(user);
+		const channel = await getChannel(cast.parentUrl);
+		const activeTier = getActiveTier(cast.author);
 		const startingPrice = getPrice(activeTier, 0);
 
 		return {
@@ -113,13 +108,13 @@ export const getData = async (
 	} else {
 		const [balance, channel] = await Promise.all([
 			await queryData(`{
-        user(id: "${
-					user.verifications[0]?.toLowerCase() ?? "0x0"
-				}:${castHash}") {
+        user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${
+				cast.hash
+			}") {
             ticketBalance
         }
         }`),
-			await getChannel(cast.parent_url!),
+			await getChannel(cast.parentUrl),
 		]);
 
 		const buyPrice = getPrice(
