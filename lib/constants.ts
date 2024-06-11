@@ -12,6 +12,9 @@ export const gameAddress = "0x116affed0a9e9dfb5ee4dd769a8b8a2a476f9927";
 
 export const apiEndpoint = "https://api-production-9d5d.up.railway.app/"
 
+export const ipfsGateway = "https://ipfs.io/ipfs";
+export const assetsIpfsHash = "QmWx4TWqnkgqYvbv2Y4XgiyzV8BLWLMJbfc3iwzJhVKmxg";
+
 export const getSCVQuery = (castHash: string) => `{
     FarcasterCasts(
       input: {filter: {hash: {_eq: "${castHash}"}}, blockchain: ALL}

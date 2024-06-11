@@ -4,7 +4,7 @@ import { serveStatic } from "frog/serve-static";
 import { neynar as neynarHub } from "frog/hubs";
 import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
-import { chainId, gameAddress, tokenSymbol } from "../lib/constants.js";
+import { assetsIpfsHash, chainId, gameAddress, ipfsGateway, tokenSymbol } from "../lib/constants.js";
 import { gameAbi } from "../lib/abis.js";
 import { zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
@@ -229,11 +229,50 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 	const getImage = async () => {
 		if (state.txHash) {
 			if (state.indexed) {
-				return `${process.env.BASE_URL}/tx-success.png`;
+				return (
+          <div
+            style={{
+              display: "flex",
+            }}
+          >
+            <img
+              src={`${ipfsGateway}/${assetsIpfsHash}/tx-success.png`}
+              style={{
+                position: "absolute",
+              }}
+            />
+          </div>
+        );
 			} else if (state.txError) {
-				return `${process.env.BASE_URL}/tx-failed.png`;
+				return (
+          <div
+            style={{
+              display: "flex",
+            }}
+          >
+            <img
+              src={`${ipfsGateway}/${assetsIpfsHash}/tx-failed.png`}
+              style={{
+                position: "absolute",
+              }}
+            />
+          </div>
+        );
 			}
-			return `${process.env.BASE_URL}/tx-pending.png`;
+			return (
+        <div
+          style={{
+            display: "flex",
+          }}
+        >
+          <img
+            src={`${ipfsGateway}/${assetsIpfsHash}/tx-pending.png`}
+            style={{
+              position: "absolute",
+            }}
+          />
+        </div>
+      );
 		}
 
 		const ownershipPercentage = (ticketsOwned / supply) * 100;
@@ -245,7 +284,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 				}}
 			>
 				<img
-					src={`${process.env.BASE_URL}/ticket-bg.png`}
+					src={`${ipfsGateway}/${assetsIpfsHash}/ticket-bg.png`}
 					style={{
 						position: "absolute",
 					}}
@@ -429,7 +468,7 @@ app.frame("/details/:channel", (c) => {
 				}}
 			>
 				<img
-					src={`${process.env.BASE_URL}/frame-bg.png`}
+					src={`${ipfsGateway}/${assetsIpfsHash}/frame-bg.png`}
 					style={{
 						position: "absolute",
 					}}
