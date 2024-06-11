@@ -210,9 +210,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 
 	const {
 		author,
-		channelId,
 		holdersCount,
-		topHoldersPfps,
 		buyPrice,
 		buyPriceFiat,
 		sellPrice,
@@ -325,7 +323,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 							</span>
 						</div>
 					</div>
-					<span style={{ fontWeight: 700 }}>/{channelId}</span>
+					<span style={{ fontWeight: 700 }}>/test</span>
 				</div>
 				{holdersCount > 0 ? (
 					<div
@@ -338,24 +336,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 						}}
 					>
 						<span>Holders ({holdersCount})</span>
-						<div
-							style={{
-								display: "flex",
-								gap: ".5rem",
-								alignItems: "center",
-							}}
-						>
-							{topHoldersPfps.map((pfp: string) => (
-								<img
-									src={pfp}
-									style={{
-										width: "65px",
-										height: "65px",
-										borderRadius: "50%",
-									}}
-								/>
-							))}
-						</div>
+						<span>-</span>
 					</div>
 				) : (
 					<div
@@ -497,7 +478,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 		let buttons = [
 			<Button.Transaction target="/buy">Buy</Button.Transaction>,
 			<Button.Reset>Refresh</Button.Reset>,
-			<Button action={`/details/${channelId}`}>Game Details</Button>,
+			<Button action={`/details`}>Details</Button>,
 		];
 
 		if (ticketsOwned > 0) {
@@ -522,7 +503,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 });
 
 // @ts-ignore
-app.frame("/details/:channel", (c) => {
+app.frame("/details", (c) => {
 	const { req, previousState } = c;
 
 	// mock data

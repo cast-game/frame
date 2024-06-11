@@ -5,9 +5,7 @@ import { parseEther } from "viem";
 
 interface TicketData {
 	author: string;
-	channelId: string;
 	holdersCount: number;
-	topHoldersPfps: string[];
 	buyPrice: number;
 	buyPriceFiat: number;
 	sellPrice: number;
@@ -101,7 +99,8 @@ export const getFiatValue = async (amount: number): Promise<number> => {
 	return data.quote.USD.price.toFixed(2);
 };
 
-export const getData = async (cast: any, fid: number): Promise<TicketData> => {
+export const 
+getData = async (cast: any, fid: number): Promise<TicketData> => {
 	const [user, ticketDetails] = await Promise.all([
 		await getUser(fid),
 		await queryData(`{
@@ -116,16 +115,11 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
 	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
 		const activeTier = getActiveTier(cast.author);
 		const startingPrice = getPrice(activeTier, 0);
-		const [channel, buyPriceFiat] = await Promise.all([
-			getChannel(cast.parentUrl),
-			getFiatValue(startingPrice),
-		]);
+		const buyPriceFiat = await getFiatValue(startingPrice);
 
 		return {
 			author: cast.author.username,
-			channelId: channel.id,
 			holdersCount: 0,
-			topHoldersPfps: [],
 			buyPrice: startingPrice,
 			buyPriceFiat,
 			sellPrice: 0,
@@ -147,7 +141,7 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
 			) * 0.8
 		);
 
-		const [balance, channel, buyPriceFiat, sellPriceFiat, holders] =
+		const [balance, buyPriceFiat, sellPriceFiat] =
 			await Promise.all([
 				await queryData(`{
         user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${
@@ -156,27 +150,15 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
             ticketBalance
         }
         }`),
-				await getChannel(cast.parentUrl),
 				getFiatValue(buyPrice),
 				getFiatValue(sellPrice),
-				neynarClient.fetchBulkUsersByEthereumAddress(
-					ticketDetails.ticket.holders
-				),
 			]);
-
-		const topHoldersPfps = Object.values(holders)
-			.flat()
-			.sort((a, b) => b.follower_count - a.follower_count)
-			.slice(0, 3)
-			.map((user) => user.pfp_url!);
 
 		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
 
 		return {
 			author: cast.author.username,
-			channelId: channel.id,
 			holdersCount: ticketDetails.ticket.holders.length,
-			topHoldersPfps,
 			buyPrice,
 			buyPriceFiat,
 			sellPrice,
