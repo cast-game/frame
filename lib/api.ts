@@ -1,4 +1,4 @@
-import { apiEndpoint, priceTiers } from "./constants.js";
+import { apiEndpoint, cmcEndpoint, priceTiers } from "./constants.js";
 import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { getChannel, getUser } from "./neynar.js";
 import { parseEther } from "viem";
@@ -6,8 +6,12 @@ import { parseEther } from "viem";
 interface TicketData {
 	author: string;
 	channelId: string;
+	holdersCount: number;
+	topHoldersPfps: string[];
 	buyPrice: number;
+	buyPriceFiat: number;
 	sellPrice: number;
+	sellPriceFiat: number;
 	supply: number;
 	ticketsOwned: number;
 }
@@ -72,12 +76,29 @@ export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 		price = getPrice(
 			ticketDetails.ticket.activeTier,
 			type === "buy"
-				? ticketDetails.ticket.supply + 1
+				? ticketDetails.ticket.supply
 				: ticketDetails.ticket.supply - 1
 		);
 	}
 
 	return parseEther(price.toString());
+};
+
+export const getFiatValue = async (amount: number): Promise<number> => {
+	const query = new URLSearchParams({
+		amount: amount.toString(),
+		id: "30096",
+		convert: "USD",
+	});
+
+	const res = await fetch(`${cmcEndpoint}?${query}`, {
+		headers: {
+			"X-CMC_PRO_API_KEY": process.env.CMC_API_KEY!,
+		},
+	});
+	const { data } = await res.json();
+
+	return data.quote.USD.price.toFixed(2);
 };
 
 export const getData = async (cast: any, fid: number): Promise<TicketData> => {
@@ -92,21 +113,41 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
     }}`),
 	]);
 
-	if (!ticketDetails.ticket) {
-		const channel = await getChannel(cast.parentUrl);
+	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
 		const activeTier = getActiveTier(cast.author);
 		const startingPrice = getPrice(activeTier, 0);
+		const [channel, buyPriceFiat] = await Promise.all([
+			getChannel(cast.parentUrl),
+			getFiatValue(startingPrice),
+		]);
 
 		return {
 			author: cast.author.username,
 			channelId: channel.id,
+			holdersCount: 0,
+			topHoldersPfps: [],
 			buyPrice: startingPrice,
-			sellPrice: startingPrice,
+			buyPriceFiat,
+			sellPrice: 0,
+			sellPriceFiat: 0,
 			supply: 0,
 			ticketsOwned: 0,
 		};
 	} else {
-		const [balance, channel] = await Promise.all([
+		const buyPrice = getPrice(
+			ticketDetails.ticket.activeTier,
+			ticketDetails.ticket.supply
+		);
+		const sellPrice = Math.ceil(
+			Math.ceil(
+				getPrice(
+					ticketDetails.ticket.activeTier,
+					ticketDetails.ticket.supply - 1
+				) * 0.8
+			) * 0.8
+		);
+
+		const [balance, channel, buyPriceFiat, sellPriceFiat] = await Promise.all([
 			await queryData(`{
         user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${
 				cast.hash
@@ -115,26 +156,22 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
         }
         }`),
 			await getChannel(cast.parentUrl),
+			getFiatValue(buyPrice),
+			getFiatValue(sellPrice),
 		]);
 
-		const buyPrice = getPrice(
-			ticketDetails.ticket.activeTier,
-			ticketDetails.ticket.supply
-		);
-		const sellPrice = Math.ceil(
-			getPrice(
-				ticketDetails.ticket.activeTier,
-				ticketDetails.ticket.supply - 1
-			) * .8
-		);
-
 		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
+		console.log(ticketDetails.ticket);
 
 		return {
 			author: cast.author.username,
 			channelId: channel.id,
+			holdersCount: ticketDetails.ticket.holders.length,
+			topHoldersPfps: [],
 			buyPrice,
-			sellPrice: Math.ceil(sellPrice * .8),
+			buyPriceFiat,
+			sellPrice,
+			sellPriceFiat,
 			supply: ticketDetails.ticket.supply,
 			ticketsOwned,
 		};

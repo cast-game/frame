@@ -15,6 +15,10 @@ export const apiEndpoint = "https://api-production-9d5d.up.railway.app/"
 export const ipfsGateway = "https://ipfs.io/ipfs";
 export const assetsIpfsHash = "QmWx4TWqnkgqYvbv2Y4XgiyzV8BLWLMJbfc3iwzJhVKmxg";
 
+// For fetching $DEGEN price data
+export const cmcEndpoint =
+  "https://pro-api.coinmarketcap.com/v2/tools/price-conversion";
+
 export const getSCVQuery = (castHash: string) => `{
     FarcasterCasts(
       input: {filter: {hash: {_eq: "${castHash}"}}, blockchain: ALL}
