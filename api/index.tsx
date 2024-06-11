@@ -15,6 +15,7 @@ import { gameAbi } from "../lib/abis.js";
 import { zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
 import { getData, getPriceForCast } from "../lib/api.js";
+import { getCast } from "../lib/neynar.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
@@ -130,7 +131,10 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 // @ts-ignore
 app.transaction("/sell", neynarMiddleware, async (c) => {
 	// Check if the frame is a cast
-	const cast = c.var.cast;
+	let cast = c.var.cast;
+	if (!cast) {
+		cast = await getCast(c.frameData.castId.hash);
+	}
 	let referrer: string = zeroAddress;
 	// if (
 	// 	![castHash, "0x0000000000000000000000000000000000000000"].includes(
@@ -204,8 +208,18 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 		if (parsed.status === "1") indexed = true;
 	}
 
-	const { author, channelId, buyPrice, sellPrice, supply, ticketsOwned } =
-		await getData(c.var.cast, c.var.interactor.fid);
+	const {
+		author,
+		channelId,
+		holdersCount,
+		topHoldersPfps,
+		buyPrice,
+		buyPriceFiat,
+		sellPrice,
+		sellPriceFiat,
+		supply,
+		ticketsOwned,
+	} = await getData(c.var.cast, c.var.interactor.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
@@ -278,9 +292,9 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 					backgroundImage: `url(${ipfsGateway}/${assetsIpfsHash}/ticket-bg.png)`,
 					flexDirection: "column",
 					width: "100%",
-					height: "100vh",
-					padding: "4.8rem 5.5rem",
-					fontSize: "2.5rem",
+					height: "100%",
+					padding: "6.5rem 7rem",
+					fontSize: "3rem",
 					gap: "2rem",
 					alignItems: "center",
 					position: "relative",
@@ -301,27 +315,52 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 								gap: "1rem",
 							}}
 						>
-							<span>Cast by @{author}</span>
+							<span
+								style={{
+									gap: ".8rem",
+								}}
+							>
+								Cast by
+								<span style={{ fontWeight: 700 }}>@{author}</span>
+							</span>
 						</div>
 					</div>
-					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-						<span>/{channelId}</span>
-					</div>
+					<span style={{ fontWeight: 700 }}>/{channelId}</span>
 				</div>
-				<div
-					style={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						fontSize: "3rem",
-						width: "100%",
-					}}
-				>
-					<span>Social Capital Value</span>
-					<div style={{ display: "flex", alignItems: "center" }}>
-						<span style={{ fontWeight: 600 }}>-</span>
+				{holdersCount > 0 ? (
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "center",
+							fontSize: "3.7rem",
+							width: "100%",
+						}}
+					>
+						<span>Holders ({holdersCount})</span>
+						<div style={{ display: "flex", alignItems: "center" }}>
+							<span style={{ fontWeight: 600 }}>-</span>
+						</div>
 					</div>
-				</div>
+				) : (
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "flex-start",
+							fontSize: "3.7rem",
+							width: "100%",
+						}}
+					>
+						<span
+							style={{
+								gap: "1rem",
+							}}
+						>
+							Buy now to earn <b style={{ color: "#80751A" }}>2x rewards</b> if
+							this cast wins!
+						</span>
+					</div>
+				)}
 				<div
 					style={{
 						display: "flex",
@@ -329,36 +368,72 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 						gap: "2rem",
 						width: "100%",
 						position: "absolute",
-						bottom: "4.5rem",
+						bottom: "6.5rem",
 					}}
 				>
 					<div
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							fontSize: "3rem",
+							fontSize: "3.7rem",
 						}}
 					>
 						<span>Buy Price</span>
-						<div style={{ display: "flex", alignItems: "center" }}>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "1.2rem",
+							}}
+						>
+							<span
+								style={{
+									fontWeight: "600",
+									fontSize: "2.5rem",
+									opacity: ".5",
+								}}
+							>
+								${buyPriceFiat}
+							</span>
+							<span style={{ fontWeight: "600" }}>{buyPrice} {tokenSymbol}</span>
+						</div>
+						{/* <div style={{ display: "flex", alignItems: "center" }}>
 							<span style={{ fontWeight: 600 }}>
 								{buyPrice} {tokenSymbol}
 							</span>
-						</div>
+						</div> */}
 					</div>
 					<div
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							fontSize: "3rem",
+							fontSize: "3.7rem",
 						}}
 					>
 						<span>Sell Price</span>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>
-								{sellPrice} {tokenSymbol}
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "1.2rem",
+							}}
+						>
+							<span
+								style={{
+									fontWeight: "600",
+									fontSize: "2.5rem",
+									opacity: ".5",
+								}}
+							>
+								${sellPriceFiat}
 							</span>
+							<span style={{ fontWeight: "600" }}>{sellPrice} {tokenSymbol}</span>
 						</div>
+						{/* <div style={{ display: "flex", alignItems: "center" }}>
+							<span style={{ fontWeight: 600 }}>
+								{sellPrice > 0 ? `${sellPrice} ${tokenSymbol}` : "-"}
+							</span>
+						</div> */}
 					</div>
 					<div
 						style={{
@@ -367,16 +442,18 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 							justifyContent: "space-between",
 						}}
 					>
-						<span>
-							Supply: {supply.toString()} ticket{supply !== 1 ? "s" : ""}
+						<span style={{ gap: "1rem" }}>
+							Supply:
+							<span style={{ fontWeight: 700 }}>
+								{supply.toString()} ticket{supply > 1 ? "s" : ""}
+							</span>
 						</span>
 						{ticketsOwned > 0 && (
 							<span>
-								You own {ticketsOwned} ticket{ticketsOwned !== 1 ? "s" : ""} (
+								You own {ticketsOwned} ticket{ticketsOwned > 1 ? "s" : ""} (
 								{ownershipPercentage}%)
 							</span>
 						)}
-						{supply === 0 && <span>Buy for potential 2x reward!</span>}
 					</div>
 				</div>
 			</div>
