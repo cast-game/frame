@@ -99,8 +99,7 @@ export const getFiatValue = async (amount: number): Promise<number> => {
 	return data.quote.USD.price.toFixed(2);
 };
 
-export const 
-getData = async (cast: any, fid: number): Promise<TicketData> => {
+export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 	const [user, ticketDetails] = await Promise.all([
 		await getUser(fid),
 		await queryData(`{

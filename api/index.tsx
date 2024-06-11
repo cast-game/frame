@@ -86,7 +86,10 @@ app.castAction(
 app.transaction("/buy", neynarMiddleware, async (c) => {
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
-	const cast = c.var.cast;
+	let cast = c.var.cast;
+	if (!cast) {
+		cast = await getCast(c.frameData.castId.hash);
+	}
 	// if (
 	// 	![castHash, "0x0000000000000000000000000000000000000000"].includes(
 	// 		frameData.castId.hash
@@ -100,7 +103,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 	// 	}
 	// }
 
-	const price = await getPriceForCast(c.var.cast, "buy");
+	const price = await getPriceForCast(cast, "buy");
 
 	const signature = await generateSignature(
 		cast.hash,
@@ -195,6 +198,11 @@ app.frame("/", (c) => {
 app.frame("/ticket", neynarMiddleware, async (c) => {
 	const { deriveState, previousState, transactionId, buttonValue }: any = c;
 
+	let cast = c.var.cast;
+	if (!cast) {
+		cast = await getCast(c.frameData.castId.hash);
+	}
+
 	let indexed: boolean;
 	let txError: boolean;
 
@@ -217,7 +225,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 		sellPriceFiat,
 		supply,
 		ticketsOwned,
-	} = await getData(c.var.cast, c.var.interactor.fid);
+	} = await getData(cast, c.var.interactor.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
