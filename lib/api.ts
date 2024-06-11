@@ -1,5 +1,5 @@
 import { apiEndpoint, priceTiers } from "./constants.js";
-import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
+import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { getCast, getChannel, getUser } from "./neynar.js";
 import { parseEther } from "viem";
 
@@ -26,26 +26,22 @@ const queryData = async (query: string) => {
 	return data;
 };
 
-export const getActiveTier = async (fid: number) => {
-	const meta = {
-		"x-dune-api-key": process.env.DUNE_API_KEY || "",
-	};
-	const header = new Headers(meta);
-	try {
-		const latest_response = await fetch(
-			`https://api.dune.com/api/v1/query/3418402/results?&filters=fid=${fid}`,
-			{
-				method: "GET",
-				headers: header,
-			}
-		);
-
-		const body = await latest_response.text();
-		const recs = JSON.parse(body).result.rows[0];
-		return recs.fid_active_tier;
-	} catch (error) {
-		return 0;
+export const getActiveTier = (user: User) => {
+	let tier;
+	if (user.follower_count < 400) {
+		tier = 0;
+	} else if (user.follower_count > 400 && user.follower_count < 1000) {
+		tier = 1;
+	} else if (user.follower_count > 1000 && user.follower_count < 10000) {
+		tier = 2;
+	} else if (user.follower_count > 10000 && user.follower_count < 50000) {
+		tier = 3;
+	} else {
+		tier = 4;
 	}
+
+	if (!user.power_badge && tier > 0) tier--;
+	return tier;
 };
 
 export function getPrice(tier: number, supply: number): number {
@@ -70,7 +66,7 @@ export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 
 	let price;
 	if (!ticketDetails.ticket) {
-		const activeTier = await getActiveTier(cast.author.fid);
+		const activeTier = getActiveTier(cast.author);
 
 		price = getPrice(activeTier, 0);
 	} else {
@@ -103,7 +99,7 @@ export const getData = async (
 
 	if (!ticketDetails.ticket) {
 		const channel = await getChannel(cast.parent_url!);
-		const activeTier = await getActiveTier(fid);
+		const activeTier = getActiveTier(user);
 		const startingPrice = getPrice(activeTier, 0);
 
 		return {
