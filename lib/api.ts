@@ -1,6 +1,6 @@
 import { apiEndpoint, cmcEndpoint, priceTiers } from "./constants.js";
 import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
-import { getChannel, getUser } from "./neynar.js";
+import { getChannel, getUser, neynarClient } from "./neynar.js";
 import { parseEther } from "viem";
 
 interface TicketData {
@@ -147,27 +147,36 @@ export const getData = async (cast: any, fid: number): Promise<TicketData> => {
 			) * 0.8
 		);
 
-		const [balance, channel, buyPriceFiat, sellPriceFiat] = await Promise.all([
-			await queryData(`{
+		const [balance, channel, buyPriceFiat, sellPriceFiat, holders] =
+			await Promise.all([
+				await queryData(`{
         user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${
-				cast.hash
-			}") {
+					cast.hash
+				}") {
             ticketBalance
         }
         }`),
-			await getChannel(cast.parentUrl),
-			getFiatValue(buyPrice),
-			getFiatValue(sellPrice),
-		]);
+				await getChannel(cast.parentUrl),
+				getFiatValue(buyPrice),
+				getFiatValue(sellPrice),
+				neynarClient.fetchBulkUsersByEthereumAddress(
+					ticketDetails.ticket.holders
+				),
+			]);
+
+		const topHoldersPfps = Object.values(holders)
+			.flat()
+			.sort((a, b) => b.follower_count - a.follower_count)
+			.slice(0, 3)
+			.map((user) => user.pfp_url!);
 
 		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
-		console.log(ticketDetails.ticket);
 
 		return {
 			author: cast.author.username,
 			channelId: channel.id,
 			holdersCount: ticketDetails.ticket.holders.length,
-			topHoldersPfps: [],
+			topHoldersPfps,
 			buyPrice,
 			buyPriceFiat,
 			sellPrice,

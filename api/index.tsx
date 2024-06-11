@@ -338,8 +338,23 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 						}}
 					>
 						<span>Holders ({holdersCount})</span>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>-</span>
+						<div
+							style={{
+								display: "flex",
+								gap: ".5rem",
+								alignItems: "center",
+							}}
+						>
+							{topHoldersPfps.map((pfp: string) => (
+								<img
+									src={pfp}
+									style={{
+										width: "65px",
+										height: "65px",
+										borderRadius: "50%",
+									}}
+								/>
+							))}
 						</div>
 					</div>
 				) : (
@@ -389,19 +404,16 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 							<span
 								style={{
 									fontWeight: "600",
-									fontSize: "2.5rem",
-									opacity: ".5",
+									fontSize: "2.9rem",
+									opacity: ".6",
 								}}
 							>
 								${buyPriceFiat}
 							</span>
-							<span style={{ fontWeight: "600" }}>{buyPrice} {tokenSymbol}</span>
-						</div>
-						{/* <div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>
+							<span style={{ fontWeight: "600" }}>
 								{buyPrice} {tokenSymbol}
 							</span>
-						</div> */}
+						</div>
 					</div>
 					<div
 						style={{
@@ -421,19 +433,16 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 							<span
 								style={{
 									fontWeight: "600",
-									fontSize: "2.5rem",
-									opacity: ".5",
+									fontSize: "2.9rem",
+									opacity: ".6",
 								}}
 							>
 								${sellPriceFiat}
 							</span>
-							<span style={{ fontWeight: "600" }}>{sellPrice} {tokenSymbol}</span>
-						</div>
-						{/* <div style={{ display: "flex", alignItems: "center" }}>
-							<span style={{ fontWeight: 600 }}>
-								{sellPrice > 0 ? `${sellPrice} ${tokenSymbol}` : "-"}
+							<span style={{ fontWeight: "600" }}>
+								{sellPrice} {tokenSymbol}
 							</span>
-						</div> */}
+						</div>
 					</div>
 					<div
 						style={{
