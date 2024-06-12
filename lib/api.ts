@@ -82,22 +82,22 @@ export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 	return parseEther(price.toString());
 };
 
-export const getFiatValue = async (amount: number): Promise<number> => {
-	const query = new URLSearchParams({
-		amount: amount.toString(),
-		id: "30096",
-		convert: "USD",
-	});
+// export const getFiatValue = async (amount: number): Promise<number> => {
+// 	const query = new URLSearchParams({
+// 		amount: amount.toString(),
+// 		id: "30096",
+// 		convert: "USD",
+// 	});
 
-	const res = await fetch(`${cmcEndpoint}?${query}`, {
-		headers: {
-			"X-CMC_PRO_API_KEY": process.env.CMC_API_KEY!,
-		},
-	});
-	const { data } = await res.json();
+// 	const res = await fetch(`${cmcEndpoint}?${query}`, {
+// 		headers: {
+// 			"X-CMC_PRO_API_KEY": process.env.CMC_API_KEY!,
+// 		},
+// 	});
+// 	const { data } = await res.json();
 
-	return data.quote.USD.price.toFixed(2);
-};
+// 	return data.quote.USD.price.toFixed(2);
+// };
 
 export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 	const [user, ticketDetails] = await Promise.all([
@@ -114,13 +114,13 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
 		const activeTier = getActiveTier(cast.author);
 		const startingPrice = getPrice(activeTier, 0);
-		const buyPriceFiat = await getFiatValue(startingPrice);
+		// const buyPriceFiat = await getFiatValue(startingPrice);
 
 		return {
 			author: cast.author.username,
 			holdersCount: 0,
 			buyPrice: startingPrice,
-			buyPriceFiat,
+			buyPriceFiat: 0,
 			sellPrice: 0,
 			sellPriceFiat: 0,
 			supply: 0,
@@ -149,8 +149,10 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
             ticketBalance
         }
         }`),
-				getFiatValue(buyPrice),
-				getFiatValue(sellPrice),
+				// getFiatValue(buyPrice),
+				// getFiatValue(sellPrice),
+				0,
+				0
 			]);
 
 		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
