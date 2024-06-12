@@ -218,7 +218,6 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 
 	const {
 		author,
-		holdersCount,
 		buyPrice,
 		buyPriceFiat,
 		sellPrice,
@@ -333,7 +332,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 					</div>
 					<span style={{ fontWeight: 700 }}>/test</span>
 				</div>
-				{holdersCount > 0 ? (
+				{supply > 0 ? (
 					<div
 						style={{
 							display: "flex",
@@ -343,8 +342,10 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 							width: "100%",
 						}}
 					>
-						<span>Holders ({holdersCount})</span>
-						<span>-</span>
+						<span>Supply</span>
+						<span style={{ fontWeight: 700 }}>
+							{supply.toString()} ticket{supply > 1 ? "s" : ""}
+						</span>
 					</div>
 				) : (
 					<div
@@ -360,7 +361,8 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 								gap: "1rem",
 							}}
 						>
-							Buy now to earn <b style={{ color: "#80751A" }}>2x rewards</b> if
+							Buy now to earn{" "}
+							<b style={{ color: "#80751A", fontWeight: 700 }}>2x rewards</b> if
 							this cast wins!
 						</span>
 					</div>
@@ -399,7 +401,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 							>
 								${buyPriceFiat}
 							</span>
-							<span style={{ fontWeight: "600" }}>
+							<span style={{ fontWeight: "700" }}>
 								{buyPrice} {tokenSymbol}
 							</span>
 						</div>
@@ -428,7 +430,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 							>
 								${sellPriceFiat}
 							</span>
-							<span style={{ fontWeight: "600" }}>
+							<span style={{ fontWeight: "700" }}>
 								{sellPrice} {tokenSymbol}
 							</span>
 						</div>
@@ -441,15 +443,17 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 						}}
 					>
 						<span style={{ gap: "1rem" }}>
-							Supply:
+							You own
 							<span style={{ fontWeight: 700 }}>
-								{supply.toString()} ticket{supply > 1 ? "s" : ""}
+								{ticketsOwned.toString()} ticket{supply !== 1 ? "s" : ""}
 							</span>
 						</span>
 						{ticketsOwned > 0 && (
-							<span>
-								You own {ticketsOwned} ticket{ticketsOwned > 1 ? "s" : ""} (
-								{ownershipPercentage}%)
+							<span style={{ gap: "1rem" }}>
+								Pool reward:
+								<span style={{ fontWeight: 700 }}>
+									{ownershipPercentage}%
+								</span>
 							</span>
 						)}
 					</div>

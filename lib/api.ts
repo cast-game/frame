@@ -5,7 +5,6 @@ import { parseEther } from "viem";
 
 interface TicketData {
 	author: string;
-	holdersCount: number;
 	buyPrice: number;
 	buyPriceFiat: string;
 	sellPrice: number;
@@ -119,7 +118,6 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 
 		return {
 			author: cast.author.username,
-			holdersCount: 0,
 			buyPrice: startingPrice,
 			buyPriceFiat,
 			sellPrice: 0,
@@ -155,7 +153,6 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 
 		return {
 			author: cast.author.username,
-			holdersCount: ticketDetails.ticket.holders.length,
 			buyPrice,
 			buyPriceFiat,
 			sellPrice,
