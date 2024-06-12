@@ -1,15 +1,15 @@
 import { apiEndpoint, cmcEndpoint, priceTiers } from "./constants.js";
 import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
-import { getChannel, getUser, neynarClient } from "./neynar.js";
+import { getUser } from "./neynar.js";
 import { parseEther } from "viem";
 
 interface TicketData {
 	author: string;
 	holdersCount: number;
 	buyPrice: number;
-	buyPriceFiat: number;
+	buyPriceFiat: string;
 	sellPrice: number;
-	sellPriceFiat: number;
+	sellPriceFiat: string;
 	supply: number;
 	ticketsOwned: number;
 }
@@ -82,25 +82,25 @@ export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 	return parseEther(price.toString());
 };
 
-// export const getFiatValue = async (amount: number): Promise<number> => {
-// 	const query = new URLSearchParams({
-// 		amount: amount.toString(),
-// 		id: "30096",
-// 		convert: "USD",
-// 	});
+export const getFiatValue = async (amount: number): Promise<number> => {
+	const query = new URLSearchParams({
+		amount: amount.toString(),
+		id: "30096",
+		convert: "USD",
+	});
 
-// 	const res = await fetch(`${cmcEndpoint}?${query}`, {
-// 		headers: {
-// 			"X-CMC_PRO_API_KEY": process.env.CMC_API_KEY!,
-// 		},
-// 	});
-// 	const { data } = await res.json();
+	const res = await fetch(`${cmcEndpoint}?${query}`, {
+		headers: {
+			"X-CMC_PRO_API_KEY": process.env.CMC_API_KEY!,
+		},
+	});
+	const { data } = await res.json();
 
-// 	return data.quote.USD.price.toFixed(2);
-// };
+	return data.quote.USD.price;
+};
 
 export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
-	const [user, ticketDetails] = await Promise.all([
+	const [user, ticketDetails, tokenPrice] = await Promise.all([
 		await getUser(fid),
 		await queryData(`{
     ticket(id: "${cast.hash}") {
@@ -109,20 +109,21 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
         holders
         supply
     }}`),
+		getFiatValue(1),
 	]);
 
 	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
 		const activeTier = getActiveTier(cast.author);
 		const startingPrice = getPrice(activeTier, 0);
-		// const buyPriceFiat = await getFiatValue(startingPrice);
+		const buyPriceFiat = Number(tokenPrice * startingPrice).toFixed(2);
 
 		return {
 			author: cast.author.username,
 			holdersCount: 0,
 			buyPrice: startingPrice,
-			buyPriceFiat: 0,
+			buyPriceFiat,
 			sellPrice: 0,
-			sellPriceFiat: 0,
+			sellPriceFiat: "",
 			supply: 0,
 			ticketsOwned: 0,
 		};
@@ -140,22 +141,17 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 			) * 0.8
 		);
 
-		const [balance, buyPriceFiat, sellPriceFiat] =
-			await Promise.all([
-				await queryData(`{
+		const balance = await queryData(`{
         user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${
-					cast.hash
-				}") {
+			cast.hash
+		}") {
             ticketBalance
         }
-        }`),
-				// getFiatValue(buyPrice),
-				// getFiatValue(sellPrice),
-				0,
-				0
-			]);
+        }`);
 
 		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
+		const buyPriceFiat = (tokenPrice * buyPrice).toFixed(2);
+		const sellPriceFiat = (tokenPrice * sellPrice).toFixed(2);
 
 		return {
 			author: cast.author.username,
