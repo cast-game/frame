@@ -48,8 +48,11 @@ export const app = new Frog<State>({
 	},
 	// Supply a Hub to enable frame verification.
 	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
-	verify: true,
+	verify: "silent",
 	secret: process.env.FROG_SECRET,
+	headers: {
+		"Content-Type": "image/png",
+	},
 	imageOptions: {
 		fonts: [
 			{
@@ -81,7 +84,7 @@ app.castAction(
 			}`
 		);
 		return c.frame({
-			path: `/ticket/${c.actionData.castId.hash}`,
+			path: `/trade/${c.actionData.castId.hash}`,
 		});
 	},
 	{ name: "cast.game ticket", icon: "tag" }
@@ -218,11 +221,14 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 	return c.res({
 		image: `https://client.warpcast.com/v2/cast-image?castHash=${castHash}`,
+		imageOptions: {
+			width: 765,
+			height: 765,
+		},
 		intents: [
 			<Button.AddCastAction action="/action">
 				Install Action
 			</Button.AddCastAction>,
-			<Button action="/details">Details</Button>,
 			<Button action={`/trade/${castHash}`}>Ticket</Button>,
 		],
 	});
