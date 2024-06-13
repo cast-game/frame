@@ -545,7 +545,7 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 	return c.res({
 		image: await getImage(),
 		headers: {
-			"Content-Type": "image/svg+xml"
+			"ContentType": "image/svg+xml"
 		},
 		imageAspectRatio: {
 			width: 1528,
