@@ -51,8 +51,6 @@ export const app = new Frog<State>({
 	verify: true,
 	secret: process.env.FROG_SECRET,
 	imageOptions: {
-		width: 1528,
-		height: 800,
 		fonts: [
 			{
 				name: "Inter",
@@ -215,6 +213,23 @@ app.frame("/", (c) => {
 
 // @ts-ignore
 app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
+	const { req } = c;
+	const castHash = req.path.split("/")[req.path.split("/").length - 1];
+
+	return c.res({
+		image: `https://client.warpcast.com/v2/cast-image?castHash=${castHash}`,
+		intents: [
+			<Button.AddCastAction action="/action">
+				Install Action
+			</Button.AddCastAction>,
+			<Button action="/details">Details</Button>,
+			<Button action={`/trade/${castHash}`}>Ticket</Button>,
+		],
+	});
+});
+
+// @ts-ignore
+app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 	const { req, deriveState, previousState, transactionId, buttonValue }: any =
 		c;
 
