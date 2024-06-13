@@ -17,6 +17,7 @@ import { generateSignature } from "../lib/contract.js";
 import { getData, getPriceForTicket } from "../lib/api.js";
 import { getCast } from "../lib/neynar.js";
 import { User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
+import { prisma } from "../lib/prisma.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
@@ -73,16 +74,25 @@ export const app = new Frog<State>({
 
 app.castAction(
 	"/action",
+	neynarMiddleware,
 	// @ts-ignore
-	(c) => {
-		console.log(
-			`Cast Action to ${JSON.stringify(c.actionData.castId)} from ${
-				c.actionData.fid
-			}`
-		);
-		return c.frame({
-			path: `/trade/${c.actionData.castId.hash}`,
-		});
+	async (c) => {
+		const round = await prisma.round.findFirst();
+		const castCreatedTime = new Date(c.var.cast.timestamp);
+		if (
+			round &&
+			round.url === c.var.cast.parentUrl &&
+			round.startTime < castCreatedTime &&
+			round.tradingEnd > castCreatedTime
+		) {
+			return c.frame({
+				path: `/trade/${c.actionData.castId.hash}`,
+			});
+		} else {
+			return c.error({
+				message: "This cast is not eligible for the current round",
+			});
+		}
 	},
 	{ name: "cast.game ticket", icon: "tag" }
 );
@@ -544,10 +554,7 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 
 	return c.res({
 		image: await getImage(),
-		headers: {
-			"ContentType": "image/svg+xml"
-		},
-		imageAspectRatio: {
+		imageOptions: {
 			width: 1528,
 			height: 800,
 		},
