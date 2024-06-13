@@ -76,7 +76,7 @@ app.castAction(
 			}`
 		);
 		return c.frame({
-			path: `/ticket`,
+			path: `/ticket/${c.actionData.castId.hash}`,
 		});
 	},
 	{ name: "cast.game ticket", icon: "tag" }
@@ -189,19 +189,16 @@ app.frame("/", (c) => {
 			<Button.AddCastAction action="/action">
 				Install Action
 			</Button.AddCastAction>,
-			<Button action="/ticket">Ticket</Button>,
+			<Button action="/ticket/0x845d16eff0bb77c828eeb4c7d3d79ce612652bbd">Ticket</Button>,
 		],
 	});
 });
 
 // @ts-ignore
-app.frame("/ticket", neynarMiddleware, async (c) => {
-	const { deriveState, previousState, transactionId, buttonValue }: any = c;
+app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
+	const { req, deriveState, previousState, transactionId, buttonValue }: any = c;
 
-	let cast = c.var.cast;
-	if (!cast) {
-		cast = await getCast(c.frameData.castId.hash);
-	}
+	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1]);
 
 	let indexed: boolean;
 	let txError: boolean;
@@ -445,7 +442,7 @@ app.frame("/ticket", neynarMiddleware, async (c) => {
 						<span style={{ gap: "1rem" }}>
 							You own
 							<span style={{ fontWeight: 700 }}>
-								{ticketsOwned.toString()} ticket{supply !== 1 ? "s" : ""}
+								{ticketsOwned.toString()} ticket{supply.toString() !== "1" ? "s" : ""}
 							</span>
 						</span>
 						{ticketsOwned > 0 && (
