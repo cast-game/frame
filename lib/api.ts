@@ -1,5 +1,5 @@
 import { apiEndpoint, cmcEndpoint, priceTiers } from "./constants.js";
-import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
+import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { getUser } from "./neynar.js";
 import { parseEther } from "viem";
 
@@ -56,9 +56,13 @@ export function getPrice(tier: number, supply: number): number {
 	return Math.ceil(pricePerShare);
 }
 
-export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
+export const getPriceForTicket = async (
+	castHash: string,
+	author: User,
+	type: "buy" | "sell"
+) => {
 	const ticketDetails = await queryData(`{
-    ticket(id: "${cast.hash}") {
+    ticket(id: "${castHash}") {
         activeTier
         channelId
         holders
@@ -67,7 +71,7 @@ export const getPriceForCast = async (cast: Cast, type: "buy" | "sell") => {
 
 	let price;
 	if (!ticketDetails.ticket) {
-		const activeTier = getActiveTier(cast.author);
+		const activeTier = getActiveTier(author);
 		price = getPrice(activeTier, 0);
 	} else {
 		price = getPrice(
