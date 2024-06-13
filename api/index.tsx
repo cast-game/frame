@@ -51,6 +51,8 @@ export const app = new Frog<State>({
 	verify: true,
 	secret: process.env.FROG_SECRET,
 	imageOptions: {
+		width: 1528,
+		height: 800,
 		fonts: [
 			{
 				name: "Inter",
