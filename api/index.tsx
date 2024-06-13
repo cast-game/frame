@@ -14,14 +14,17 @@ import {
 import { gameAbi } from "../lib/abis.js";
 import { zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { getData, getPriceForCast } from "../lib/api.js";
+import { getData, getPriceForTicket } from "../lib/api.js";
 import { getCast } from "../lib/neynar.js";
+import { User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
 // }
 
 type State = {
+	castHash: string | null;
+	creator: User | null;
 	txHash: string | null;
 	indexed: boolean;
 	txError: boolean;
@@ -37,13 +40,15 @@ export const app = new Frog<State>({
 	assetsPath: "/",
 	basePath: "/api",
 	initialState: {
+		castHash: null,
+		creator: null,
 		txHash: null,
 		indexed: false,
 		txError: false,
 	},
 	// Supply a Hub to enable frame verification.
 	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
-	verify: "silent",
+	verify: true,
 	secret: process.env.FROG_SECRET,
 	imageOptions: {
 		fonts: [
@@ -84,38 +89,43 @@ app.castAction(
 
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
+	const { previousState, frameData } = c;
+
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
-	let cast = c.var.cast;
-	if (!cast) {
-		cast = await getCast(c.frameData.castId.hash);
+	if (
+		![
+			previousState.castHash,
+			"0x0000000000000000000000000000000000000000",
+		].includes(frameData.castId.hash)
+	) {
+		const referralCast = await getCast(frameData.castId.hash);
+		if (referralCast.author.fid !== previousState.creatorFid) {
+			referrer =
+				referralCast.author.verified_addresses.eth_addresses[0] ??
+				referralCast.author.custody_address;
+		}
 	}
-	// if (
-	// 	![castHash, "0x0000000000000000000000000000000000000000"].includes(
-	// 		frameData.castId.hash
-	// 	)
-	// ) {
-	// 	const referralCast = await getCast(frameData.castId.hash);
-	// 	if (referralCast.author.fid !== cast.author.fid) {
-	// 		referrer =
-	// 			referralCast.author.verified_addresses.eth_addresses[0] ??
-	// 			referralCast.author.custody_address;
-	// 	}
-	// }
 
-	const price = await getPriceForCast(cast, "buy");
+	const price = await getPriceForTicket(
+		previousState.castHash,
+		previousState.creator,
+		"buy"
+	);
 
 	const signature = await generateSignature(
-		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
+		previousState.castHash,
+		previousState.creator.verifiedAddresses.ethAddresses[0] ??
+			previousState.creator.custodyAddress,
 		BigInt(1),
 		price,
 		referrer
 	);
 
 	const args = [
-		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
+		previousState.castHash,
+		previousState.creator.verifiedAddresses.ethAddresses[0] ??
+			previousState.creator.custodyAddress,
 		BigInt(1),
 		price,
 		referrer,
@@ -133,38 +143,43 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 
 // @ts-ignore
 app.transaction("/sell", neynarMiddleware, async (c) => {
-	// Check if the frame is a cast
-	let cast = c.var.cast;
-	if (!cast) {
-		cast = await getCast(c.frameData.castId.hash);
-	}
-	let referrer: string = zeroAddress;
-	// if (
-	// 	![castHash, "0x0000000000000000000000000000000000000000"].includes(
-	// 		frameData.castId.hash
-	// 	)
-	// ) {
-	// 	const referralCast = await getCast(frameData.castId.hash);
-	// 	if (referralCast.author.fid !== cast.author.fid) {
-	// 		referrer =
-	// 			referralCast.author.verified_addresses.eth_addresses[0] ??
-	// 			referralCast.author.custody_address;
-	// 	}
-	// }
+	const { previousState, frameData } = c;
 
-	const price = await getPriceForCast(cast, "sell");
+	// Check if the frame is a cast
+	let referrer: string = zeroAddress;
+	if (
+		![
+			previousState.castHash,
+			"0x0000000000000000000000000000000000000000",
+		].includes(frameData.castId.hash)
+	) {
+		const referralCast = await getCast(frameData.castId.hash);
+		if (referralCast.author.fid !== previousState.creator.fid) {
+			referrer =
+				referralCast.author.verified_addresses.eth_addresses[0] ??
+				referralCast.author.custody_address;
+		}
+	}
+
+	const price = await getPriceForTicket(
+		previousState.castHash,
+		previousState.creator,
+		"sell"
+	);
 
 	const signature = await generateSignature(
-		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
+		previousState.castHash,
+		previousState.creator.verifiedAddresses.ethAddresses[0] ??
+			previousState.creator.custodyAddress,
 		BigInt(1),
 		price,
 		referrer
 	);
 
 	const args = [
-		cast.hash,
-		cast.author.verifiedAddresses.ethAddresses[0] ?? cast.author.custodyAddress,
+		previousState.castHash,
+		previousState.creator.verifiedAddresses.ethAddresses[0] ??
+			previousState.creator.custodyAddress,
 		BigInt(1),
 		price,
 		referrer,
@@ -189,14 +204,17 @@ app.frame("/", (c) => {
 			<Button.AddCastAction action="/action">
 				Install Action
 			</Button.AddCastAction>,
-			<Button action="/ticket/0x845d16eff0bb77c828eeb4c7d3d79ce612652bbd">Ticket</Button>,
+			<Button action="/ticket/0x845d16eff0bb77c828eeb4c7d3d79ce612652bbd">
+				Ticket
+			</Button>,
 		],
 	});
 });
 
 // @ts-ignore
 app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
-	const { req, deriveState, previousState, transactionId, buttonValue }: any = c;
+	const { req, deriveState, previousState, transactionId, buttonValue }: any =
+		c;
 
 	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1]);
 
@@ -225,6 +243,10 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
+		if (cast) {
+			previousState.castHash = cast.hash;
+			previousState.creator = cast.author;
+		}
 		if (indexed) previousState.indexed = true;
 		if (txError) previousState.txError = true;
 		if (transactionId !== "0x" && transactionId !== undefined)
@@ -442,15 +464,14 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 						<span style={{ gap: "1rem" }}>
 							You own
 							<span style={{ fontWeight: 700 }}>
-								{ticketsOwned.toString()} ticket{supply.toString() !== "1" ? "s" : ""}
+								{ticketsOwned.toString()} ticket
+								{supply.toString() !== "1" ? "s" : ""}
 							</span>
 						</span>
 						{ticketsOwned > 0 && (
 							<span style={{ gap: "1rem" }}>
 								Pool reward:
-								<span style={{ fontWeight: 700 }}>
-									{ownershipPercentage}%
-								</span>
+								<span style={{ fontWeight: 700 }}>{ownershipPercentage}%</span>
 							</span>
 						)}
 					</div>
