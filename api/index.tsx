@@ -77,22 +77,22 @@ app.castAction(
 	neynarMiddleware,
 	// @ts-ignore
 	async (c) => {
-		const round = await prisma.round.findFirst();
-		const castCreatedTime = new Date(c.var.cast.timestamp);
-		if (
-			round &&
-			round.url === c.var.cast.parentUrl &&
-			round.startTime < castCreatedTime &&
-			round.tradingEnd > castCreatedTime
-		) {
+		// const round = await prisma.round.findFirst();
+		// const castCreatedTime = new Date(c.var.cast.timestamp);
+		// if (
+		// 	round &&
+		// 	round.url === c.var.cast.parentUrl &&
+		// 	round.startTime < castCreatedTime &&
+		// 	round.tradingEnd > castCreatedTime
+		// ) {
 			return c.frame({
 				path: `/trade/${c.actionData.castId.hash}`,
 			});
-		} else {
-			return c.error({
-				message: "This cast is not eligible for the current round",
-			});
-		}
+		// } else {
+		// 	return c.error({
+		// 		message: "This cast is not eligible for the current round",
+		// 	});
+		// }
 	},
 	{ name: "cast.game ticket", icon: "tag" }
 );
