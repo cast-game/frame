@@ -86,7 +86,7 @@ app.castAction(
 		// 	round.tradingEnd > castCreatedTime
 		// ) {
 			return c.frame({
-				path: `/trade/${c.actionData.castId.hash}`,
+				path: `/trade`,
 			});
 		// } else {
 		// 	return c.error({
@@ -224,11 +224,19 @@ app.frame("/", (c) => {
 
 // @ts-ignore
 app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
-	const { req } = c;
-	const castHash = req.path.split("/")[req.path.split("/").length - 1];
+	const { req, deriveState } = c;
+	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1]);
+
+	// @ts-ignore
+	const state = deriveState((previousState) => {
+		if (cast) {
+			previousState.castHash = cast.hash;
+			previousState.creator = cast.author;
+		}
+	});
 
 	return c.res({
-		image: `https://client.warpcast.com/v2/cast-image?castHash=${castHash}`,
+		image: `https://client.warpcast.com/v2/cast-image?castHash=${cast.hash}`,
 		imageOptions: {
 			width: 765,
 			height: 765,
@@ -237,17 +245,14 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 			<Button.AddCastAction action="/action">
 				Install Action
 			</Button.AddCastAction>,
-			<Button action={`/trade/${castHash}`}>Ticket</Button>,
+			<Button action={`/trade`}>Ticket</Button>,
 		],
 	});
 });
 
 // @ts-ignore
-app.frame("/trade/:hash", neynarMiddleware, async (c) => {
-	const { req, deriveState, previousState, transactionId, buttonValue }: any =
-		c;
-
-	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1]);
+app.frame("/trade", neynarMiddleware, async (c) => {
+	const { deriveState, previousState, transactionId, buttonValue }: any = c;
 
 	let indexed: boolean;
 	let txError: boolean;
@@ -261,6 +266,8 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 		if (parsed.status === "0") txError = true;
 		if (parsed.status === "1") indexed = true;
 	}
+
+	let cast = previousState.castHash ? await getCast(previousState.castHash) : c.var.cast;
 
 	const {
 		author,
@@ -555,6 +562,9 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 
 	return c.res({
 		image: await getImage(),
+		headers: {
+			"Cache-Control": "max-age=0",
+		},
 		imageOptions: {
 			width: 1528,
 			height: 800,
