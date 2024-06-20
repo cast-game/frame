@@ -51,6 +51,7 @@ export const app = new Frog<State>({
 	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
 	verify: "silent",
 	secret: process.env.FROG_SECRET!,
+	imageAspectRatio: '1.91:1',
 	imageOptions: {
 		fonts: [
 			{
@@ -565,10 +566,6 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		headers: {
 			"Content-Type": "image/png",
 			"Cache-Control": "max-age=0",
-		},
-		imageOptions: {
-			width: 1528,
-			height: 800,
 		},
 		intents: getIntents(),
 	});
