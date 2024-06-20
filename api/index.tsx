@@ -50,7 +50,7 @@ export const app = new Frog<State>({
 	// Supply a Hub to enable frame verification.
 	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
 	verify: "silent",
-	secret: process.env.FROG_SECRET,
+	secret: process.env.FROG_SECRET!,
 	imageOptions: {
 		fonts: [
 			{
@@ -210,6 +210,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 app.frame("/", (c) => {
 	return c.res({
 		image: <></>,
+		title: "cast.game",
 		intents: [
 			<Button.AddCastAction action="/action">
 				Install Action
