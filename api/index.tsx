@@ -563,6 +563,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 	return c.res({
 		image: await getImage(),
 		headers: {
+			"Content-Type": "image/png",
 			"Cache-Control": "max-age=0",
 		},
 		imageOptions: {
