@@ -13,7 +13,7 @@ export const gameAddress = "0x116affed0a9e9dfb5ee4dd769a8b8a2a476f9927";
 export const apiEndpoint = "https://api-production-9d5d.up.railway.app/"
 
 export const ipfsGateway = "https://ipfs.io/ipfs";
-export const assetsIpfsHash = "QmWx4TWqnkgqYvbv2Y4XgiyzV8BLWLMJbfc3iwzJhVKmxg";
+export const assetsIpfsHash = "QmP1ogNrTciYXRGANBwuHhsJeRS68ePK8erKN2TqYYafcC";
 
 // For fetching $DEGEN price data
 export const cmcEndpoint =

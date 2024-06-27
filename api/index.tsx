@@ -238,10 +238,6 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 	return c.res({
 		image: `https://client.warpcast.com/v2/cast-image?castHash=${cast.hash}`,
-		imageOptions: {
-			width: 765,
-			height: 765,
-		},
 		intents: [
 			<Button.AddCastAction action="/action">
 				Install Action
@@ -563,9 +559,9 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 	return c.res({
 		image: await getImage(),
-		headers: {
-			"Content-Type": "image/png",
-			"Cache-Control": "max-age=0",
+		imageOptions: {
+			width: 1910,
+			height: 1000,
 		},
 		intents: getIntents(),
 	});
