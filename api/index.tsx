@@ -182,7 +182,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 
   const signature = await generateSignature(
     previousState.castHash,
-    previousState.creator.verifiedAddresses.ethAddresses[0] ??
+    previousState.creator.verified_addresses.eth_addresses[0] ??
       previousState.creator.custodyAddress,
     BigInt(1),
     price,
@@ -191,7 +191,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 
   const args = [
     previousState.castHash,
-    previousState.creator.verifiedAddresses.ethAddresses[0] ??
+    previousState.creator.verified_addresses.eth_addresses[0] ??
       previousState.creator.custodyAddress,
     BigInt(1),
     price,
@@ -376,176 +376,6 @@ app.frame("/trade", neynarMiddleware, async (c) => {
         <Image src={imageUrl} objectFit="contain" />
       </Box>
     );
-
-    // return (
-    //   <div
-    //     style={{
-    //       display: "flex",
-    //       backgroundImage: `url(${ipfsGateway}/${assetsIpfsHash}/ticket-bg.png)`,
-    //       flexDirection: "column",
-    //       width: "100%",
-    //       height: "100%",
-    //       padding: "6.5rem 7rem",
-    //       fontSize: "3rem",
-    //       gap: "2rem",
-    //       alignItems: "center",
-    //       position: "relative",
-    //     }}
-    //   >
-    //     <div
-    //       style={{
-    //         display: "flex",
-    //         justifyContent: "space-between",
-    //         width: "100%",
-    //       }}
-    //     >
-    //       <div style={{ display: "flex", alignItems: "center" }}>
-    //         <div
-    //           style={{
-    //             display: "flex",
-    //             alignItems: "center",
-    //             gap: "1rem",
-    //           }}
-    //         >
-    //           <span
-    //             style={{
-    //               gap: ".8rem",
-    //             }}
-    //           >
-    //             Cast by
-    //             <span style={{ fontWeight: 700 }}>@{author}</span>
-    //           </span>
-    //         </div>
-    //       </div>
-    //       <span style={{ fontWeight: 700 }}>/test</span>
-    //     </div>
-    //     {supply > 0 ? (
-    //       <div
-    //         style={{
-    //           display: "flex",
-    //           justifyContent: "space-between",
-    //           alignItems: "center",
-    //           fontSize: "3.7rem",
-    //           width: "100%",
-    //         }}
-    //       >
-    //         <span>Supply</span>
-    //         <span style={{ fontWeight: 700 }}>
-    //           {supply.toString()} ticket{supply > 1 ? "s" : ""}
-    //         </span>
-    //       </div>
-    //     ) : (
-    //       <div
-    //         style={{
-    //           display: "flex",
-    //           justifyContent: "flex-start",
-    //           fontSize: "3.7rem",
-    //           width: "100%",
-    //         }}
-    //       >
-    //         <span
-    //           style={{
-    //             gap: "1rem",
-    //           }}
-    //         >
-    //           Buy now to earn{" "}
-    //           <b style={{ color: "#80751A", fontWeight: 700 }}>2x rewards</b> if
-    //           this cast wins!
-    //         </span>
-    //       </div>
-    //     )}
-    //     <div
-    //       style={{
-    //         display: "flex",
-    //         flexDirection: "column",
-    //         gap: "2rem",
-    //         width: "100%",
-    //         position: "absolute",
-    //         bottom: "6.5rem",
-    //       }}
-    //     >
-    //       <div
-    //         style={{
-    //           display: "flex",
-    //           justifyContent: "space-between",
-    //           fontSize: "3.7rem",
-    //         }}
-    //       >
-    //         <span>Buy Price</span>
-    //         <div
-    //           style={{
-    //             display: "flex",
-    //             alignItems: "center",
-    //             gap: "1.2rem",
-    //           }}
-    //         >
-    //           <span
-    //             style={{
-    //               fontWeight: "600",
-    //               fontSize: "2.9rem",
-    //               opacity: ".6",
-    //             }}
-    //           >
-    //             ${buyPriceFiat}
-    //           </span>
-    //           <span style={{ fontWeight: "700" }}>
-    //             {buyPrice} {tokenSymbol}
-    //           </span>
-    //         </div>
-    //       </div>
-    //       <div
-    //         style={{
-    //           display: "flex",
-    //           justifyContent: "space-between",
-    //           fontSize: "3.7rem",
-    //         }}
-    //       >
-    //         <span>Sell Price</span>
-    //         <div
-    //           style={{
-    //             display: "flex",
-    //             alignItems: "center",
-    //             gap: "1.2rem",
-    //           }}
-    //         >
-    //           <span
-    //             style={{
-    //               fontWeight: "600",
-    //               fontSize: "2.9rem",
-    //               opacity: ".6",
-    //             }}
-    //           >
-    //             ${sellPriceFiat}
-    //           </span>
-    //           <span style={{ fontWeight: "700" }}>
-    //             {sellPrice} {tokenSymbol}
-    //           </span>
-    //         </div>
-    //       </div>
-    //       <div
-    //         style={{
-    //           display: "flex",
-    //           width: "100%",
-    //           justifyContent: "space-between",
-    //         }}
-    //       >
-    //         <span style={{ gap: "1rem" }}>
-    //           You own
-    //           <span style={{ fontWeight: 700 }}>
-    //             {ticketsOwned.toString()} ticket
-    //             {supply.toString() !== "1" ? "s" : ""}
-    //           </span>
-    //         </span>
-    //         {ticketsOwned > 0 && (
-    //           <span style={{ gap: "1rem" }}>
-    //             Pool reward:
-    //             <span style={{ fontWeight: 700 }}>{ownershipPercentage}%</span>
-    //           </span>
-    //         )}
-    //       </div>
-    //     </div>
-    //   </div>
-    // );
   };
 
   const getIntents = () => {
