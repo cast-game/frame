@@ -127,7 +127,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 
   const signature = await generateSignature(
     previousState.castHash,
-    previousState.creator.verifiedAddresses.ethAddresses[0] ??
+    previousState.creator.verified_addresses.eth_addresses[0] ??
       previousState.creator.custodyAddress,
     BigInt(1),
     price,
@@ -136,7 +136,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 
   const args = [
     previousState.castHash,
-    previousState.creator.verifiedAddresses.ethAddresses[0] ??
+    previousState.creator.verified_addresses.eth_addresses[0] ??
       previousState.creator.custodyAddress,
     BigInt(1),
     price,
@@ -150,6 +150,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
     functionName: "buy",
     args,
     to: gameAddress,
+		value: price
   });
 });
 
