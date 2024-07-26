@@ -129,7 +129,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.verified_addresses.eth_addresses
 			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custodyAddress,
+			: previousState.creator.custody_address,
 		BigInt(1),
 		price,
 		referrer
@@ -139,7 +139,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.verified_addresses.eth_addresses
 			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custodyAddress,
+			: previousState.creator.custody_address,
 		BigInt(1),
 		price,
 		referrer,
@@ -186,7 +186,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.verified_addresses.eth_addresses
 			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custodyAddress,
+			: previousState.creator.custody_address,
 		BigInt(1),
 		price,
 		referrer
@@ -196,7 +196,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.verified_addresses.eth_addresses
 			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custodyAddress,
+			: previousState.creator.custody_address,
 		BigInt(1),
 		price,
 		referrer,
@@ -215,6 +215,8 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
+	const testCastHash = "0x795db72c1ac7e2a9d7cfa94d29552d9040a0b2ba";
+
 	return c.res({
 		image: <></>,
 		title: "cast.game",
@@ -222,7 +224,7 @@ app.frame("/", (c) => {
 			<Button.AddCastAction action="/action">
 				Install Action
 			</Button.AddCastAction>,
-			<Button action="/ticket/0x845d16eff0bb77c828eeb4c7d3d79ce612652bbd">
+			<Button action={`/ticket/${testCastHash}`}>
 				Ticket
 			</Button>,
 		],
