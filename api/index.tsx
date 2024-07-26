@@ -109,8 +109,7 @@ app.castAction(
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
 	const { previousState, frameData } = c;
-	console.log(previousState.creator.address);
-
+	
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
 	if (

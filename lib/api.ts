@@ -88,7 +88,10 @@ export const getPriceForTicket = async (
 export const getFiatValue = async (amount: number): Promise<number> => {
 	const query = new URLSearchParams({
 		amount: amount.toString(),
-		id: "30096",
+		// $DEGEN
+		// id: "30096",
+		// $ETH
+		id: "1027",
 		convert: "USD",
 	});
 
