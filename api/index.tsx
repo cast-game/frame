@@ -12,9 +12,9 @@ import {
 	tokenSymbol,
 } from "../lib/constants.js";
 import { gameAbi } from "../lib/abis.js";
-import { zeroAddress } from "viem";
+import { parseEther, zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { getData, getPriceForTicket } from "../lib/api.js";
+import { getData } from "../lib/api.js";
 import { getCast } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
@@ -130,7 +130,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(1),
-		previousState.prices.buy,
+		parseEther(previousState.prices.buy),
 		referrer
 	);
 
@@ -138,7 +138,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(1),
-		previousState.prices.buy,
+		parseEther(previousState.prices.buy),
 		referrer,
 		signature,
 	];
@@ -149,7 +149,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		functionName: "buy",
 		args,
 		to: gameAddress,
-		value: previousState.prices.buy,
+		value: parseEther(previousState.prices.buy),
 	});
 });
 
@@ -173,17 +173,11 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		}
 	}
 
-	const price = await getPriceForTicket(
-		previousState.castHash,
-		previousState.creator,
-		"sell"
-	);
-
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(1),
-		previousState.prices.sell,
+		parseEther(previousState.prices.sell),
 		referrer
 	);
 
@@ -191,7 +185,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(1),
-		previousState.prices.sell,
+		parseEther(previousState.prices.sell),
 		referrer,
 		signature,
 	];
@@ -285,7 +279,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 					: cast.author.custody_address,
 			};
 		}
-		if (buyPrice && sellPrice)
+		if (buyPrice)
 			previousState.prices = {
 				buy: buyPrice.toString(),
 				sell: sellPrice.toString(),
