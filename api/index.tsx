@@ -454,7 +454,7 @@ app.image("/ticket-img", async (c) => {
 					width: "100%",
 					height: "100%",
 					padding: "6.5rem 7rem",
-					fontSize: "3rem",
+					fontSize: "3.5rem",
 					gap: "2rem",
 					alignItems: "center",
 					position: "relative",
@@ -493,7 +493,7 @@ app.image("/ticket-img", async (c) => {
 							display: "flex",
 							justifyContent: "space-between",
 							alignItems: "center",
-							fontSize: "3.7rem",
+							fontSize: "4rem",
 							width: "100%",
 						}}
 					>
@@ -507,7 +507,7 @@ app.image("/ticket-img", async (c) => {
 						style={{
 							display: "flex",
 							justifyContent: "flex-start",
-							fontSize: "3.7rem",
+							fontSize: "4rem",
 							width: "100%",
 						}}
 					>
@@ -536,7 +536,7 @@ app.image("/ticket-img", async (c) => {
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							fontSize: "3.7rem",
+							fontSize: "4rem",
 						}}
 					>
 						<span>Buy Price</span>
@@ -551,7 +551,7 @@ app.image("/ticket-img", async (c) => {
 							<span
 								style={{
 									fontWeight: "600",
-									fontSize: "2.9rem",
+									fontSize: "3.2rem",
 									opacity: ".6",
 								}}
 							>
@@ -566,7 +566,7 @@ app.image("/ticket-img", async (c) => {
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							fontSize: "3.7rem",
+							fontSize: "4rem",
 						}}
 					>
 						<span>Sell Price</span>
@@ -581,7 +581,7 @@ app.image("/ticket-img", async (c) => {
 							<span
 								style={{
 									fontWeight: "600",
-									fontSize: "2.9rem",
+									fontSize: "3.2rem",
 									opacity: ".6",
 								}}
 							>
@@ -659,7 +659,7 @@ app.frame("/details", (c) => {
 						padding: "5.5rem",
 						flexDirection: "column",
 						gap: "2rem",
-						fontSize: "3rem",
+						fontSize: "3.5rem",
 						position: "relative",
 						alignItems: "center",
 					}}
@@ -673,7 +673,7 @@ app.frame("/details", (c) => {
 							alignItems: "center",
 						}}
 					>
-						<span style={{ fontSize: "5rem", fontWeight: 700 }}>
+						<span style={{ fontSize: "5.4rem", fontWeight: 700 }}>
 							{prizePool} DEGEN
 						</span>
 						<span style={{ fontWeight: 600 }}>${prizePoolUSD}</span>
@@ -683,7 +683,7 @@ app.frame("/details", (c) => {
 							display: "flex",
 							width: "100%",
 							justifyContent: "space-between",
-							fontSize: "2.5rem",
+							fontSize: "3rem",
 							position: "absolute",
 							bottom: "0",
 						}}
