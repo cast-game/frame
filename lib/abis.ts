@@ -397,7 +397,6 @@ export const gameAbi = [
 				type: "address",
 				internalType: "address",
 			},
-			{ name: "_token", type: "address", internalType: "address" },
 			{ name: "_treasury", type: "address", internalType: "address" },
 		],
 		stateMutability: "nonpayable",
@@ -414,7 +413,7 @@ export const gameAbi = [
 			{ name: "signature", type: "bytes", internalType: "bytes" },
 		],
 		outputs: [],
-		stateMutability: "nonpayable",
+		stateMutability: "payable",
 	},
 	{
 		type: "function",
@@ -536,13 +535,6 @@ export const gameAbi = [
 		name: "tickets",
 		inputs: [],
 		outputs: [{ name: "", type: "address", internalType: "contract Tickets" }],
-		stateMutability: "view",
-	},
-	{
-		type: "function",
-		name: "token",
-		inputs: [],
-		outputs: [{ name: "", type: "address", internalType: "contract IERC20" }],
 		stateMutability: "view",
 	},
 	{
