@@ -27,21 +27,21 @@ const queryData = async (query: string) => {
 	return data;
 };
 
-export const getActiveTier = (user: any) => {
+export const getActiveTier = (user: User) => {
 	let tier;
-	if (user.followerCount < 400) {
+	if (user.follower_count < 400) {
 		tier = 0;
-	} else if (user.followerCount > 400 && user.followerCount < 1000) {
+	} else if (user.follower_count > 400 && user.follower_count < 1000) {
 		tier = 1;
-	} else if (user.followerCount > 1000 && user.followerCount < 10000) {
+	} else if (user.follower_count > 1000 && user.follower_count < 10000) {
 		tier = 2;
-	} else if (user.followerCount > 10000 && user.followerCount < 50000) {
+	} else if (user.follower_count > 10000 && user.follower_count < 50000) {
 		tier = 3;
 	} else {
 		tier = 4;
 	}
 
-	if (!user.powerBadge && tier > 0) tier--;
+	if (!user.power_badge && tier > 0) tier--;
 	return tier;
 };
 

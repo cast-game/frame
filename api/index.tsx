@@ -16,7 +16,6 @@ import { zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
 import { getData, getPriceForTicket } from "../lib/api.js";
 import { getCast } from "../lib/neynar.js";
-import { User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { Box, Image } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
 // Uncomment to use Edge Runtime.
@@ -26,7 +25,14 @@ import { Box, Image } from "./ui.js";
 
 type State = {
 	castHash: string | null;
-	creator: User | null;
+	prices: {
+		buy: string;
+		sell: string;
+	} | null;
+	creator: {
+		fid: number;
+		address: string;
+	} | null;
 	txHash: string | null;
 	indexed: boolean;
 	txError: boolean;
@@ -43,6 +49,7 @@ export const app = new Frog<State>({
 	basePath: "/api",
 	initialState: {
 		castHash: null,
+		prices: null,
 		creator: null,
 		txHash: null,
 		indexed: false,
@@ -112,36 +119,26 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		].includes(frameData.castId.hash)
 	) {
 		const referralCast = await getCast(frameData.castId.hash);
-		if (referralCast.author.fid !== previousState.creatorFid) {
+		if (referralCast.author.fid !== previousState.creator.fid) {
 			referrer = referralCast.author.verified_addresses.eth_addresses
 				? referralCast.author.verified_addresses.eth_addresses[0]
 				: referralCast.author.custody_address;
 		}
 	}
 
-	const price = await getPriceForTicket(
-		previousState.castHash,
-		previousState.creator,
-		"buy"
-	);
-
 	const signature = await generateSignature(
 		previousState.castHash,
-		previousState.creator.verified_addresses.eth_addresses
-			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custody_address,
+		previousState.creator.address,
 		BigInt(1),
-		price,
+		previousState.prices.buy,
 		referrer
 	);
 
 	const args = [
 		previousState.castHash,
-		previousState.creator.verified_addresses.eth_addresses
-			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custody_address,
+		previousState.creator.address,
 		BigInt(1),
-		price,
+		previousState.prices.buy,
 		referrer,
 		signature,
 	];
@@ -152,7 +149,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		functionName: "buy",
 		args,
 		to: gameAddress,
-		value: price,
+		value: previousState.prices.buy,
 	});
 });
 
@@ -170,7 +167,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 	) {
 		const referralCast = await getCast(frameData.castId.hash);
 		if (referralCast.author.fid !== previousState.creator.fid) {
-			referrer = referralCast.author.verified_addresses.eth_addresses
+			referrer = referralCast.author.verified_addresses
 				? referralCast.author.verified_addresses.eth_addresses[0]
 				: referralCast.author.custody_address;
 		}
@@ -184,21 +181,17 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 
 	const signature = await generateSignature(
 		previousState.castHash,
-		previousState.creator.verified_addresses.eth_addresses
-			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custody_address,
+		previousState.creator.address,
 		BigInt(1),
-		price,
+		previousState.prices.sell,
 		referrer
 	);
 
 	const args = [
 		previousState.castHash,
-		previousState.creator.verified_addresses.eth_addresses
-			? previousState.creator.verified_addresses.eth_addresses[0]
-			: previousState.creator.custody_address,
+		previousState.creator.address,
 		BigInt(1),
-		price,
+		previousState.prices.sell,
 		referrer,
 		signature,
 	];
@@ -224,9 +217,7 @@ app.frame("/", (c) => {
 			<Button.AddCastAction action="/action">
 				Install Action
 			</Button.AddCastAction>,
-			<Button action={`/ticket/${testCastHash}`}>
-				Ticket
-			</Button>,
+			<Button action={`/ticket/${testCastHash}`}>Ticket</Button>,
 		],
 	});
 });
@@ -238,10 +229,7 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
-		if (cast) {
-			previousState.castHash = cast.hash;
-			previousState.creator = cast.author;
-		}
+		if (cast) previousState.castHash = cast.hash;
 	});
 
 	return c.res({
@@ -290,8 +278,18 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 	const state = deriveState((previousState) => {
 		if (cast) {
 			previousState.castHash = cast.hash;
-			previousState.creator = cast.author;
+			previousState.creator = {
+				fid: cast.author.fid,
+				address: cast.author.verified_addresses
+					? cast.author.verified_addresses.eth_addresses[0]
+					: cast.author.custody_address,
+			};
 		}
+		if (buyPrice && sellPrice)
+			previousState.prices = {
+				buy: buyPrice.toString(),
+				sell: sellPrice.toString(),
+			};
 		if (indexed) previousState.indexed = true;
 		if (txError) previousState.txError = true;
 		if (transactionId !== "0x" && transactionId !== undefined)
