@@ -109,7 +109,7 @@ app.castAction(
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
 	const { previousState, frameData } = c;
-	
+
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
 	if (
@@ -202,7 +202,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0x795db72c1ac7e2a9d7cfa94d29552d9040a0b2ba";
+	const testCastHash = "0x884f70c443947b85612c22df6e754f4ac7fa7694";
 
 	return c.res({
 		image: <></>,
@@ -545,6 +545,7 @@ app.image("/ticket-img", async (c) => {
 								display: "flex",
 								alignItems: "center",
 								gap: "1.2rem",
+								color: "#048006",
 							}}
 						>
 							<span
@@ -574,6 +575,7 @@ app.image("/ticket-img", async (c) => {
 								display: "flex",
 								alignItems: "center",
 								gap: "1.2rem",
+								color: "#8c060c",
 							}}
 						>
 							<span
@@ -606,7 +608,7 @@ app.image("/ticket-img", async (c) => {
 						</span>
 						{Number(ticketsOwned) > 0 && (
 							<span style={{ gap: "1rem" }}>
-								Pool reward:
+								Cast ownership:
 								<span style={{ fontWeight: 700 }}>{ownershipPercentage}%</span>
 							</span>
 						)}

@@ -122,13 +122,15 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 		const activeTier = getActiveTier(cast.author);
 		const startingPrice = getPrice(activeTier, 0);
 		const buyPriceFiat = Number(tokenPrice * startingPrice).toFixed(2);
+		const sellPriceFiat = Number(tokenPrice * startingPrice * 0.64).toFixed(2);
 
 		return {
 			author: cast.author.username,
 			buyPrice: startingPrice,
 			buyPriceFiat,
-			sellPrice: 0,
-			sellPriceFiat: "",
+			// buy price minus fees
+			sellPrice: startingPrice * 0.64,
+			sellPriceFiat,
 			supply: 0,
 			ticketsOwned: 0,
 		};
