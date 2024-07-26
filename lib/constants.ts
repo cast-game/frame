@@ -59,23 +59,23 @@ export const getSCVQuery = (castHash: string) => `{
 // in ETH
 export const priceTiers = [
 	{
-			startingPrice: 0.00025, // $0.50
-			priceAt50: 0.04,        // $80
+			startingPrice: 0.00015, // $0.50
+			priceAt50: 0.01,        // $80
 	},
 	{
-			startingPrice: 0.0005,  // $1
-			priceAt50: 0.05,        // $100
+			startingPrice: 0.0003,  // $1
+			priceAt50: 0.015,        // $100
 	},
 	{
-			startingPrice: 0.002,   // $4
-			priceAt50: 0.1,         // $200
+			startingPrice: 0.001,   // $4
+			priceAt50: 0.03,         // $200
 	},
 	{
-			startingPrice: 0.0035,  // $7
-			priceAt50: 0.125,       // $250
+			startingPrice: 0.002,  // $7
+			priceAt50: 0.04,       // $250
 	},
 	{
-			startingPrice: 0.005,   // $10
-			priceAt50: 0.175,       // $350
+			startingPrice: 0.003,   // $10
+			priceAt50: 0.05,       // $350
 	},
 ];
