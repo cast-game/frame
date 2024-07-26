@@ -109,6 +109,7 @@ app.castAction(
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
 	const { previousState, frameData } = c;
+	console.log(previousState.creator.address);
 
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
@@ -120,8 +121,8 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 	) {
 		const referralCast = await getCast(frameData.castId.hash);
 		if (referralCast.author.fid !== previousState.creator.fid) {
-			referrer = referralCast.author.verified_addresses.eth_addresses
-				? referralCast.author.verified_addresses.eth_addresses[0]
+			referrer = referralCast.author.verifications
+				? referralCast.author.verifications[0]
 				: referralCast.author.custody_address;
 		}
 	}
@@ -167,8 +168,8 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 	) {
 		const referralCast = await getCast(frameData.castId.hash);
 		if (referralCast.author.fid !== previousState.creator.fid) {
-			referrer = referralCast.author.verified_addresses
-				? referralCast.author.verified_addresses.eth_addresses[0]
+			referrer = referralCast.author.verifications
+				? referralCast.author.verifications[0]
 				: referralCast.author.custody_address;
 		}
 	}
@@ -274,8 +275,8 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 			previousState.castHash = cast.hash;
 			previousState.creator = {
 				fid: cast.author.fid,
-				address: cast.author.verified_addresses
-					? cast.author.verified_addresses.eth_addresses[0]
+				address: cast.author.verifications
+					? cast.author.verifications[0]
 					: cast.author.custody_address,
 			};
 		}
@@ -442,7 +443,7 @@ app.image("/ticket-img", async (c) => {
 		ticketsOwned,
 		ownershipPercentage,
 	} = json;
-	const baseUrl = process.env.NEXT_PUBLIC_API ?? "http://localhost:3000";
+	// const baseUrl = process.env.NEXT_PUBLIC_API ?? "http://localhost:3000";
 
 	const getImage = async () => {
 		return (
