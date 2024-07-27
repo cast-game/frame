@@ -94,6 +94,13 @@ app.castAction(
 		// 	round.startTime < castCreatedTime &&
 		// 	round.tradingEnd > castCreatedTime
 		// ) {
+		console.log(c.var.cast);
+		if (c.var.cast.channel === null) {
+			return c.error({
+				message: "This cast is not eligible for the current round",
+			});
+		}
+
 		return c.frame({
 			path: `/trade`,
 		});
@@ -202,7 +209,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0x876b871dbaa162303f5dfdb2b3659b95fdd579e4";
+	const testCastHash = "0x28f9619eb003d6a0dd6f3be1f8cf73dfdeb626bc";
 
 	return c.res({
 		image: <></>,
@@ -357,6 +364,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 			ticketsOwned: ticketsOwned.toString(),
 			topHoldersPfps: topHoldersPfps.toString(),
 			ownershipPercentage: ownershipPercentage.toString(),
+			channelId: cast.channel.id,
 		});
 
 		try {
@@ -444,6 +452,7 @@ app.image("/ticket-img", async (c) => {
 		ticketsOwned,
 		topHoldersPfps,
 		ownershipPercentage,
+		channelId,
 	} = json;
 
 	const pfps = topHoldersPfps.split(",");
@@ -490,7 +499,7 @@ app.image("/ticket-img", async (c) => {
 							</span>
 						</div>
 					</div>
-					<span style={{ fontWeight: 700 }}>/test</span>
+					<span style={{ fontWeight: 700 }}>/{channelId}</span>
 				</div>
 				{Number(supply) > 0 ? (
 					<div
@@ -507,8 +516,8 @@ app.image("/ticket-img", async (c) => {
 							<img
 								src={pfp}
 								style={{
-									width: "75px",
-									height: "75px",
+									width: "80px",
+									height: "80px",
 									borderRadius: "50%",
 								}}
 							/>
