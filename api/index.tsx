@@ -202,7 +202,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0x28f9619eb003d6a0dd6f3be1f8cf73dfdeb626bc";
+	const testCastHash = "0x876b871dbaa162303f5dfdb2b3659b95fdd579e4";
 
 	return c.res({
 		image: <></>,
@@ -528,7 +528,8 @@ app.image("/ticket-img", async (c) => {
 								gap: "1rem",
 							}}
 						>
-							Earn <b>double rewards</b> as first buyer!
+							Earn <b style={{ color: "#ad0e6e" }}>double rewards</b> as the
+							first buyer!
 						</span>
 					</div>
 				)}
@@ -555,7 +556,6 @@ app.image("/ticket-img", async (c) => {
 								display: "flex",
 								alignItems: "center",
 								gap: "1.2rem",
-								color: "#048006",
 							}}
 						>
 							<span
@@ -585,7 +585,6 @@ app.image("/ticket-img", async (c) => {
 								display: "flex",
 								alignItems: "center",
 								gap: "1.2rem",
-								color: "#8c060c",
 							}}
 						>
 							<span
