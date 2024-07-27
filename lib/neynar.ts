@@ -17,9 +17,9 @@ export const getUser = async (fid: number) => {
   return res.users[0];
 };
 
-export const getChannel = async (parentUrl: string) => {
-  const res = await neynarClient.lookupChannel(parentUrl, {
-    type: "parent_url",
+export const getChannel = async (id: string) => {
+  const res = await neynarClient.lookupChannel(id, {
+    type: "id",
   });
   return res.channel;
 };

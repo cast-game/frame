@@ -14,6 +14,7 @@ export const apiEndpoint = "https://api-production-9d5d.up.railway.app/"
 
 export const ipfsGateway = "https://ipfs.io/ipfs";
 export const assetsIpfsHash = "QmP1ogNrTciYXRGANBwuHhsJeRS68ePK8erKN2TqYYafcC";
+export const logoIpfsHash = "QmPyhMaHL5w3teHNuSMADXFiUFC4FPurXcquyNUnMnAz57";
 
 // For fetching $DEGEN price data
 export const cmcEndpoint =

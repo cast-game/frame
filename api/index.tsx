@@ -9,13 +9,14 @@ import {
 	chainId,
 	gameAddress,
 	ipfsGateway,
+	logoIpfsHash,
 	tokenSymbol,
 } from "../lib/constants.js";
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
 import { getData } from "../lib/api.js";
-import { getCast } from "../lib/neynar.js";
+import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
 // Uncomment to use Edge Runtime.
@@ -646,16 +647,15 @@ app.image("/ticket-img", async (c) => {
 });
 
 // @ts-ignore
-app.frame("/details", (c) => {
-	const { req, previousState } = c;
+app.frame("/details", async (c) => {
+	const { previousState } = c;
 
 	// mock data
 	const prizePool = 90123;
 	const prizePoolUSD = 1234.56;
 	const txCount = 829;
 	const timeUntilTradingHalt = "5 hours";
-
-	const channel = req.path.split("/")[req.path.split("/").length - 1];
+	const channel = await getChannel("memes");
 
 	return c.res({
 		image: (
@@ -674,53 +674,97 @@ app.frame("/details", (c) => {
 					style={{
 						display: "flex",
 						width: "100%",
-						padding: "5.5rem",
+						padding: "4.5rem",
 						flexDirection: "column",
 						gap: "2rem",
-						fontSize: "3.5rem",
+						fontSize: "2.5rem",
 						position: "relative",
 						alignItems: "center",
 					}}
 				>
-					<span>cast.game x {channel}</span>
-					<span>Prize Pool:</span>
 					<div
 						style={{
 							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-						}}
-					>
-						<span style={{ fontSize: "5.4rem", fontWeight: 700 }}>
-							{prizePool} DEGEN
-						</span>
-						<span style={{ fontWeight: 600 }}>${prizePoolUSD}</span>
-					</div>
-					<div
-						style={{
-							display: "flex",
-							width: "100%",
 							justifyContent: "space-between",
-							fontSize: "3rem",
-							position: "absolute",
-							bottom: "0",
+							alignItems: "center",
+							width: "100%",
 						}}
 					>
-						<span>{txCount} tickets purchased</span>
-						<span>Trading stops in {timeUntilTradingHalt}</span>
+						<img src={`${ipfsGateway}/${logoIpfsHash}`} height={40} />
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								fontWeight: 600,
+								gap: "1rem",
+							}}
+						>
+							<img
+								src={channel.image_url}
+								style={{
+									width: "50px",
+									height: "50px",
+									borderRadius: "50%",
+								}}
+							/>
+							<span>/{channel.id}</span>
+						</div>
 					</div>
+					<span style={{ fontSize: "3.5rem", fontWeight: 600 }}>
+						Memes Competition
+					</span>
+					<div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								padding: "1.5rem 4rem",
+								minWidth: "380px",
+								borderRadius: "10px",
+								backgroundColor: "#E6E6E6",
+								flexDirection: "column",
+								gap: "5px"
+							}}
+						>
+							<div
+								style={{ display: "flex", gap: "1rem", alignItems: "center" }}
+							>
+								<img
+									src={
+										"https://s2.coinmarketcap.com/static/img/coins/200x200/30096.png"
+									}
+									style={{
+										width: "60px",
+										height: "60px",
+										borderRadius: "50%",
+									}}
+								/>
+								<span style={{ fontSize: "60px", fontWeight: 600 }}>230k</span>
+							</div>
+							<span style={{ fontSize: "40px"}}>reward pool</span>
+						</div>
+						
+					</div>
+					
+					<span>Trading ends in 12 hours.</span>
 				</div>
 			</div>
 		),
 		intents: [
 			<Button.Link href="https://cast.game/about">cast.game</Button.Link>,
-			<Button.Link href={`https://warpcast.com/~/channel/${channel}`}>
-				/{channel}
+			<Button.Link href={`https://warpcast.com/~/channel/${channel.id}`}>
+				/{channel.id}
 			</Button.Link>,
 			<Button action={`/ticket/${previousState.castHash}`}>↩</Button>,
 		],
 	});
 });
+
+// @ts-ignore
+app.image("/details-img", (c) => {
+
+})
 
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
