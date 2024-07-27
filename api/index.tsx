@@ -202,7 +202,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0x884f70c443947b85612c22df6e754f4ac7fa7694";
+	const testCastHash = "0x28f9619eb003d6a0dd6f3be1f8cf73dfdeb626bc";
 
 	return c.res({
 		image: <></>,
@@ -265,6 +265,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		sellPrice,
 		sellPriceFiat,
 		supply,
+		topHoldersPfps,
 		ticketsOwned,
 	} = await getData(cast, c.var.interactor.fid);
 
@@ -354,6 +355,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 			sellPriceFiat: sellPriceFiat.toString(),
 			supply: supply.toString(),
 			ticketsOwned: ticketsOwned.toString(),
+			topHoldersPfps: topHoldersPfps.toString(),
 			ownershipPercentage: ownershipPercentage.toString(),
 		});
 
@@ -440,8 +442,11 @@ app.image("/ticket-img", async (c) => {
 		sellPriceFiat,
 		sellPrice,
 		ticketsOwned,
+		topHoldersPfps,
 		ownershipPercentage,
 	} = json;
+
+	const pfps = topHoldersPfps.split(",");
 	// const baseUrl = process.env.NEXT_PUBLIC_API ?? "http://localhost:3000";
 
 	const getImage = async () => {
@@ -497,10 +502,17 @@ app.image("/ticket-img", async (c) => {
 							width: "100%",
 						}}
 					>
-						<span>Supply</span>
-						<span style={{ fontWeight: 700 }}>
-							{supply} ticket{Number(supply) > 1 ? "s" : ""}
-						</span>
+						<span>Supply: {supply} | Top Holders</span>
+						{pfps.map((pfp: string) => (
+							<img
+								src={pfp}
+								style={{
+									width: "75px",
+									height: "75px",
+									borderRadius: "50%",
+								}}
+							/>
+						))}
 					</div>
 				) : (
 					<div
@@ -516,9 +528,7 @@ app.image("/ticket-img", async (c) => {
 								gap: "1rem",
 							}}
 						>
-							Buy now to earn{" "}
-							<b style={{ color: "#80751A", fontWeight: 700 }}>2x rewards</b> if
-							this cast wins!
+							Earn <b>double rewards</b> as first buyer!
 						</span>
 					</div>
 				)}

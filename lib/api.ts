@@ -1,6 +1,6 @@
 import { apiEndpoint, cmcEndpoint, priceTiers } from "./constants.js";
 import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
-import { getUser } from "./neynar.js";
+import { getUser, getUsersFromAddresses } from "./neynar.js";
 import { parseEther } from "viem";
 
 interface TicketData {
@@ -10,6 +10,7 @@ interface TicketData {
 	sellPrice: number;
 	sellPriceFiat: string;
 	supply: number;
+	topHoldersPfps: string[];
 	ticketsOwned: number;
 }
 
@@ -118,6 +119,14 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 		getFiatValue(1),
 	]);
 
+	const res = await getUsersFromAddresses(ticketDetails.ticket.holders);
+
+	const holders = Object.values(res).flatMap(arr => arr);
+	const topHoldersPfps = holders
+		.sort((a, b) => b.follower_count - a.follower_count)
+		.slice(0, 5)
+		.map(user => user.pfp_url!);
+
 	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
 		const activeTier = getActiveTier(cast.author);
 		const startingPrice = getPrice(activeTier, 0);
@@ -132,6 +141,7 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 			sellPrice: startingPrice * 0.64,
 			sellPriceFiat,
 			supply: 0,
+			topHoldersPfps: [],
 			ticketsOwned: 0,
 		};
 	} else {
@@ -167,6 +177,7 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 			sellPrice,
 			sellPriceFiat,
 			supply: ticketDetails.ticket.supply,
+			topHoldersPfps,
 			ticketsOwned,
 		};
 	}
