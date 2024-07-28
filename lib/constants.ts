@@ -6,9 +6,9 @@ export const chainId = useMainnet ? "eip155:8453" : "eip155:84532";
 
 export const tokenSymbol = "ETH";
 
-export const ticketsAddress = "0x83909330D0E5821F6116C921E94D212239F4631F";
+export const ticketsAddress = "0xedee0c6A3Ef8CEF3cAAa21Df3908379D83012B75";
 // TODO: prob move to db
-export const gameAddress = "0xCAc80268aBae7307C2Aa9C169251EBa876303a51";
+export const gameAddress = "0x95Fe2f778BA3DA6116636860bf40aC12C41b813E";
 
 export const apiEndpoint = "https://api-production-9d5d.up.railway.app/";
 
