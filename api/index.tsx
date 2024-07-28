@@ -532,8 +532,8 @@ app.image("/ticket-img", async (c) => {
 							width: "100%",
 						}}
 					>
-						<span style={{ fontSize: "4.2rem" }}>Tickets minted</span>
-						<span style={{ fontWeight: 600, fontSize: "4.5rem" }}>
+						<span style={{ fontSize: "4.5rem" }}>Tickets minted</span>
+						<span style={{ fontWeight: 600, fontSize: "5rem" }}>
 							{supply}
 						</span>
 						{/* {pfps.map((pfp: string) => (
@@ -552,13 +552,14 @@ app.image("/ticket-img", async (c) => {
 						style={{
 							display: "flex",
 							justifyContent: "flex-start",
-							fontSize: "4.2rem",
+							fontSize: "4.5rem",
 							width: "100%",
 						}}
 					>
 						<span
 							style={{
 								gap: "1rem",
+								fontSize: "5rem"
 							}}
 						>
 							Earn <b style={{ color: "#ad0e6e" }}>double rewards</b> as the
@@ -582,7 +583,7 @@ app.image("/ticket-img", async (c) => {
 							justifyContent: "space-between",
 						}}
 					>
-						<span style={{ fontSize: "4.2rem" }}>Buy Price</span>
+						<span style={{ fontSize: "4.5rem" }}>Buy Price</span>
 						<div
 							style={{
 								display: "flex",
@@ -599,7 +600,7 @@ app.image("/ticket-img", async (c) => {
 							>
 								${buyPriceFiat}
 							</span> */}
-							<span style={{ fontWeight: "700", fontSize: "4.5rem" }}>
+							<span style={{ fontWeight: "700", fontSize: "5rem" }}>
 								{buyPrice} {tokenSymbol}
 							</span>
 						</div>
@@ -611,7 +612,7 @@ app.image("/ticket-img", async (c) => {
 							fontSize: "4rem",
 						}}
 					>
-						<span style={{ fontSize: "4.2rem" }}>Sell Price</span>
+						<span style={{ fontSize: "4.5rem" }}>Sell Price</span>
 						<div
 							style={{
 								display: "flex",
@@ -628,7 +629,7 @@ app.image("/ticket-img", async (c) => {
 							>
 								${sellPriceFiat}
 							</span> */}
-							<span style={{ fontWeight: "700", fontSize: "4.5rem" }}>
+							<span style={{ fontWeight: "700", fontSize: "5rem" }}>
 								{sellPrice} {tokenSymbol}
 							</span>
 						</div>
