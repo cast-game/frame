@@ -50,9 +50,7 @@ export function getPrice(tier: number, supply: number): number {
 	const priceTier = priceTiers[tier];
 	const growthRate =
 		Math.log(priceTier.priceAt50 / priceTier.startingPrice) / 50;
-	const newSupply = supply;
-	const pricePerShare =
-		priceTier.startingPrice * Math.exp(growthRate * newSupply);
+	const pricePerShare = priceTier.startingPrice * Math.exp(growthRate * supply);
 
 	return Math.ceil(pricePerShare * 100000) / 100000;
 }
@@ -152,14 +150,12 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 			ticketDetails.ticket.activeTier,
 			ticketDetails.ticket.supply
 		);
-		const sellPrice = Math.ceil(
-			Math.ceil(
-				getPrice(
-					ticketDetails.ticket.activeTier,
-					ticketDetails.ticket.supply - 1
-				) * 0.8
-			) * 0.8
-		);
+
+		const sellPrice =
+			Math.ceil((getPrice(
+				ticketDetails.ticket.activeTier,
+				ticketDetails.ticket.supply - 1
+			) * 0.64) * 100000) / 100000;
 
 		const balance = await queryData(`{
         user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${
