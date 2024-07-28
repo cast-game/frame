@@ -1,7 +1,13 @@
-import { apiEndpoint, cmcEndpoint, priceTiers } from "./constants.js";
+import {
+	apiEndpoint,
+	cmcEndpoint,
+	gameAddress,
+	priceTiers,
+} from "./constants.js";
 import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
-import { getUser, getUsersFromAddresses } from "./neynar.js";
-import { parseEther } from "viem";
+import { getUser } from "./neynar.js";
+import { formatEther, parseEther } from "viem";
+import { client } from "./contract.js";
 
 interface TicketData {
 	author: string;
@@ -104,6 +110,27 @@ export const getFiatValue = async (amount: number): Promise<number> => {
 	return data.quote.USD.price;
 };
 
+export const getDetails = async () => {
+	const rewardPool = await client.getBalance({
+		address: gameAddress,
+	});
+
+	const transactionCount = await client.getTransactionCount({
+		address: gameAddress,
+	});
+	const { gameStats } = await queryData(`{
+		gameStats(id: "0") {
+			users
+		}
+	}`);
+
+	return {
+		rewardPool: Number(formatEther(rewardPool)).toFixed(3),
+		transactionCount,
+		userCount: gameStats.users.length,
+	};
+};
+
 export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 	const [user, ticketDetails, tokenPrice] = await Promise.all([
 		await getUser(fid),
@@ -152,10 +179,14 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 		);
 
 		const sellPrice =
-			Math.ceil((getPrice(
-				ticketDetails.ticket.activeTier,
-				ticketDetails.ticket.supply - 1
-			) * 0.64) * 100000) / 100000;
+			Math.ceil(
+				getPrice(
+					ticketDetails.ticket.activeTier,
+					ticketDetails.ticket.supply - 1
+				) *
+					0.64 *
+					100000
+			) / 100000;
 
 		const balance = await queryData(`{
         user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${

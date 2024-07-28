@@ -7,6 +7,7 @@ import { handle } from "frog/vercel";
 import {
 	assetsIpfsHash,
 	chainId,
+	formatNumber,
 	gameAddress,
 	ipfsGateway,
 	logoIpfsHash,
@@ -15,7 +16,7 @@ import {
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { getData } from "../lib/api.js";
+import { getData, getDetails } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
@@ -532,7 +533,9 @@ app.image("/ticket-img", async (c) => {
 						}}
 					>
 						<span style={{ fontSize: "4.2rem" }}>Tickets minted</span>
-						<span style={{ fontWeight: 600, fontSize: "4.5rem" }}>{supply}</span>
+						<span style={{ fontWeight: 600, fontSize: "4.5rem" }}>
+							{supply}
+						</span>
 						{/* {pfps.map((pfp: string) => (
 							<img
 								src={pfp}
@@ -667,19 +670,23 @@ app.image("/ticket-img", async (c) => {
 
 // @ts-ignore
 app.frame("/details", async (c) => {
-	const { previousState } = c;
+	// const { previousState } = c;
 
 	// TODO: get channelId from db
-	const channel = await getChannel("memes");
+	const [channel, details] = await Promise.all([
+		await getChannel("memes"),
+		await getDetails(),
+	]);
 
 	const params = new URLSearchParams({
 		title: "Testnet Demo Competition",
 		channelId: channel.id,
 		imageUrl: channel.image_url ?? "",
-		tradingEnd: "13 hours",
-		rewardPool: "255k",
-		txCount: "321",
-		userCount: "128",
+		// TODO: get trading end from contract
+		tradingEnd: "__",
+		rewardPool: formatNumber(Number(details.rewardPool)),
+		txCount: details.transactionCount.toString(),
+		userCount: details.userCount.toString(),
 	});
 
 	try {
@@ -810,7 +817,7 @@ app.image("/details-img", (c) => {
 							>
 								<img
 									src={
-										"https://s2.coinmarketcap.com/static/img/coins/200x200/30096.png"
+										"https://seeklogo.com/images/E/ethereum-logo-EC6CDBA45B-seeklogo.com.png"
 									}
 									style={{
 										width: "50px",

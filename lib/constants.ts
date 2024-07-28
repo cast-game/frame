@@ -10,7 +10,7 @@ export const ticketsAddress = "0x83909330D0E5821F6116C921E94D212239F4631F";
 // TODO: prob move to db
 export const gameAddress = "0xCAc80268aBae7307C2Aa9C169251EBa876303a51";
 
-export const apiEndpoint = "https://api-production-9d5d.up.railway.app/"
+export const apiEndpoint = "https://api-production-9d5d.up.railway.app/";
 
 export const ipfsGateway = "https://ipfs.io/ipfs";
 export const assetsIpfsHash = "QmP1ogNrTciYXRGANBwuHhsJeRS68ePK8erKN2TqYYafcC";
@@ -18,7 +18,7 @@ export const logoIpfsHash = "QmPyhMaHL5w3teHNuSMADXFiUFC4FPurXcquyNUnMnAz57";
 
 // For fetching $DEGEN price data
 export const cmcEndpoint =
-  "https://pro-api.coinmarketcap.com/v2/tools/price-conversion";
+	"https://pro-api.coinmarketcap.com/v2/tools/price-conversion";
 
 export const getSCVQuery = (castHash: string) => `{
     FarcasterCasts(
@@ -32,6 +32,16 @@ export const getSCVQuery = (castHash: string) => `{
       }
     }
   }`;
+
+export function formatNumber(number: number): string {
+	if (number >= 1000000) {
+		return (number / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
+	} else if (number >= 1000) {
+		return (number / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+	} else {
+		return number.toString();
+	}
+}
 
 // in $DEGEN
 // export const priceTiers = [
@@ -60,23 +70,23 @@ export const getSCVQuery = (castHash: string) => `{
 // in ETH
 export const priceTiers = [
 	{
-			startingPrice: 0.00015, // $0.50
-			priceAt50: 0.01,        // $80
+		startingPrice: 0.00015, // $0.50
+		priceAt50: 0.01, // $80
 	},
 	{
-			startingPrice: 0.0003,  // $1
-			priceAt50: 0.015,        // $100
+		startingPrice: 0.0003, // $1
+		priceAt50: 0.015, // $100
 	},
 	{
-			startingPrice: 0.001,   // $4
-			priceAt50: 0.03,         // $200
+		startingPrice: 0.001, // $4
+		priceAt50: 0.03, // $200
 	},
 	{
-			startingPrice: 0.002,  // $7
-			priceAt50: 0.04,       // $250
+		startingPrice: 0.002, // $7
+		priceAt50: 0.04, // $250
 	},
 	{
-			startingPrice: 0.003,   // $10
-			priceAt50: 0.05,       // $350
+		startingPrice: 0.003, // $10
+		priceAt50: 0.05, // $350
 	},
 ];
