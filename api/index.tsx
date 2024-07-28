@@ -95,7 +95,6 @@ app.castAction(
 		// 	round.startTime < castCreatedTime &&
 		// 	round.tradingEnd > castCreatedTime
 		// ) {
-		console.log(c.var.cast);
 		if (c.var.cast.channel === null) {
 			return c.error({
 				message: "This cast is not eligible for the current round",
@@ -569,7 +568,7 @@ app.image("/ticket-img", async (c) => {
 								gap: "1.2rem",
 							}}
 						>
-							<span
+							{/* <span
 								style={{
 									fontWeight: "600",
 									fontSize: "3.2rem",
@@ -577,7 +576,7 @@ app.image("/ticket-img", async (c) => {
 								}}
 							>
 								${buyPriceFiat}
-							</span>
+							</span> */}
 							<span style={{ fontWeight: "700" }}>
 								{buyPrice} {tokenSymbol}
 							</span>
@@ -598,7 +597,7 @@ app.image("/ticket-img", async (c) => {
 								gap: "1.2rem",
 							}}
 						>
-							<span
+							{/* <span
 								style={{
 									fontWeight: "600",
 									fontSize: "3.2rem",
@@ -606,7 +605,7 @@ app.image("/ticket-img", async (c) => {
 								}}
 							>
 								${sellPriceFiat}
-							</span>
+							</span> */}
 							<span style={{ fontWeight: "700" }}>
 								{sellPrice} {tokenSymbol}
 							</span>
@@ -661,7 +660,7 @@ app.frame("/details", async (c) => {
 		tradingEnd: "13 hours",
 		rewardPool: "255k",
 		txCount: "321",
-		userCount: "156",
+		userCount: "128",
 	});
 
 	try {
@@ -759,7 +758,7 @@ app.image("/details-img", (c) => {
 							<span>/{channelId}</span>
 						</div>
 					</div>
-					<span style={{ fontSize: "3.2rem", fontWeight: 600 }}>{title}</span>
+					<span style={{ fontSize: "3.2rem", fontWeight: 600, marginTop: ".4rem" }}>{title}</span>
 					<div
 						style={{
 							display: "flex",
@@ -767,7 +766,7 @@ app.image("/details-img", (c) => {
 							alignItems: "center",
 							justifyContent: "center",
 							width: "100%",
-							marginBottom: "2rem"
+							margin: "1.7rem 0"
 						}}
 					>
 						<div
