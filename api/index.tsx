@@ -209,7 +209,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0x28f9619eb003d6a0dd6f3be1f8cf73dfdeb626bc";
+	const testCastHash = "0x35cb24ff22bf52b9888cd448f1fad4adf823aaac";
 
 	return c.res({
 		image: <></>,
@@ -291,7 +291,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		sellPrice,
 		sellPriceFiat,
 		supply,
-		topHoldersPfps,
+		// topHoldersPfps,
 		ticketsOwned,
 	} = await getData(cast, c.var.interactor.fid);
 
@@ -371,7 +371,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 			);
 		}
 
-		const ownershipPercentage = (ticketsOwned / supply) * 100;
+		const ownershipPercentage = Math.ceil((ticketsOwned / supply) * 100);
 
 		const params = new URLSearchParams({
 			author,
@@ -433,7 +433,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 		let buttons = [
 			<Button.Transaction target="/buy">Buy</Button.Transaction>,
-			<Button.Reset>Refresh</Button.Reset>,
+			<Button value="refresh">Refresh</Button>,
 			<Button action={`/details`}>Details</Button>,
 		];
 

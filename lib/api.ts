@@ -117,16 +117,16 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 		getFiatValue(1),
 	]);
 
-	let topHoldersPfps: string[] = [];
+	// let topHoldersPfps: string[] = [];
 
-	if (ticketDetails.ticket) {
-		const res = await getUsersFromAddresses(ticketDetails.ticket.holders);
-		const holders = Object.values(res).flatMap((arr) => arr);
-		topHoldersPfps = holders
-			.sort((a, b) => b.follower_count - a.follower_count)
-			.slice(0, 5)
-			.map((user) => user.pfp_url!);
-	}
+	// if (ticketDetails.ticket) {
+	// 	const res = await getUsersFromAddresses(ticketDetails.ticket.holders);
+	// 	const holders = Object.values(res).flatMap((arr) => arr);
+	// 	topHoldersPfps = holders
+	// 		.sort((a, b) => b.follower_count - a.follower_count)
+	// 		.slice(0, 5)
+	// 		.map((user) => user.pfp_url!);
+	// }
 
 	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
 		const activeTier = getActiveTier(cast.author);
@@ -176,7 +176,7 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 			sellPrice,
 			sellPriceFiat,
 			supply: ticketDetails.ticket.supply,
-			topHoldersPfps,
+			topHoldersPfps: [],
 			ticketsOwned,
 		};
 	}
