@@ -409,8 +409,9 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		if (state.txHash) {
 			if (state.indexed) {
 				return [
+					<Button.Link href={"https://cast.game"}>Share 🗣️</Button.Link>,
 					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
-						View
+						Transaction
 					</Button.Link>,
 					<Button value="return">Done</Button>,
 				];
