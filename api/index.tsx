@@ -704,7 +704,7 @@ app.frame("/details", async (c) => {
 			<Button.Link href={`https://warpcast.com/~/channel/${channel.id}`}>
 				/{channel.id}
 			</Button.Link>,
-			<Button action={`/ticket/${previousState.castHash}`}>↩</Button>,
+			<Button action={`/trade`}>↩</Button>,
 		],
 	});
 });
