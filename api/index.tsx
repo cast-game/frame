@@ -363,7 +363,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 			sellPriceFiat: sellPriceFiat.toString(),
 			supply: supply.toString(),
 			ticketsOwned: ticketsOwned.toString(),
-			topHoldersPfps: topHoldersPfps.toString(),
+			// topHoldersPfps: topHoldersPfps.toString(),
 			ownershipPercentage: ownershipPercentage.toString(),
 			channelId: cast.channel.id,
 		});
@@ -451,12 +451,12 @@ app.image("/ticket-img", async (c) => {
 		sellPriceFiat,
 		sellPrice,
 		ticketsOwned,
-		topHoldersPfps,
+		// topHoldersPfps,
 		ownershipPercentage,
 		channelId,
 	} = json;
 
-	const pfps = topHoldersPfps.split(",");
+	// const pfps = topHoldersPfps.split(",");
 	// const baseUrl = process.env.NEXT_PUBLIC_API ?? "http://localhost:3000";
 
 	const getImage = async () => {
@@ -512,8 +512,9 @@ app.image("/ticket-img", async (c) => {
 							width: "100%",
 						}}
 					>
-						<span>Supply: {supply} | Top Holders</span>
-						{pfps.map((pfp: string) => (
+						<span>Tickets minted</span>
+						<span style={{ fontWeight: 600 }}>{supply}</span>
+						{/* {pfps.map((pfp: string) => (
 							<img
 								src={pfp}
 								style={{
@@ -522,7 +523,7 @@ app.image("/ticket-img", async (c) => {
 									borderRadius: "50%",
 								}}
 							/>
-						))}
+						))} */}
 					</div>
 				) : (
 					<div
@@ -724,7 +725,7 @@ app.frame("/details", async (c) => {
 								borderRadius: "10px",
 								backgroundColor: "#E6E6E6",
 								flexDirection: "column",
-								gap: "5px"
+								gap: "5px",
 							}}
 						>
 							<div
@@ -742,11 +743,10 @@ app.frame("/details", async (c) => {
 								/>
 								<span style={{ fontSize: "60px", fontWeight: 600 }}>230k</span>
 							</div>
-							<span style={{ fontSize: "40px"}}>reward pool</span>
+							<span style={{ fontSize: "40px" }}>reward pool</span>
 						</div>
-						
 					</div>
-					
+
 					<span>Trading ends in 12 hours.</span>
 				</div>
 			</div>
@@ -762,9 +762,7 @@ app.frame("/details", async (c) => {
 });
 
 // @ts-ignore
-app.image("/details-img", (c) => {
-
-})
+app.image("/details-img", (c) => {});
 
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
