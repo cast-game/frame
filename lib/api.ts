@@ -111,23 +111,28 @@ export const getFiatValue = async (amount: number): Promise<number> => {
 };
 
 export const getDetails = async () => {
-	const rewardPool = await client.getBalance({
-		address: gameAddress,
-	});
-
-	const transactionCount = await client.getTransactionCount({
-		address: gameAddress,
-	});
-	const { gameStats } = await queryData(`{
-		gameStats(id: "0") {
-			users
-		}
-	}`);
+	const [rewardPool, txsRes, statsRes] = await Promise.all([
+		client.getBalance({
+			address: gameAddress,
+		}),
+		queryData(`{
+			transactions {
+				items {
+					id
+				}
+			}
+		}`),
+		queryData(`{
+			gameStats(id: "0") {
+				users
+			}
+		}`),
+	]);
 
 	return {
 		rewardPool: Number(formatEther(rewardPool)).toFixed(3),
-		transactionCount,
-		userCount: gameStats.users.length,
+		transactionCount: txsRes.transactions.items.length,
+		userCount: statsRes.gameStats.users.length,
 	};
 };
 
