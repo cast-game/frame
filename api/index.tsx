@@ -651,12 +651,60 @@ app.image("/ticket-img", async (c) => {
 app.frame("/details", async (c) => {
 	const { previousState } = c;
 
-	// mock data
-	const prizePool = 90123;
-	const prizePoolUSD = 1234.56;
-	const txCount = 829;
-	const timeUntilTradingHalt = "5 hours";
+	// TODO: get channelId from db
 	const channel = await getChannel("memes");
+
+	const params = new URLSearchParams({
+		title: "Testnet Demo Competition",
+		channelId: channel.id,
+		imageUrl: channel.image_url ?? "",
+		tradingEnd: "13 hours",
+		rewardPool: "255k",
+		txCount: "321",
+		userCount: "156",
+	});
+
+	try {
+		await fetch(
+			`${process.env.PUBLIC_URL}/api/details-img?${params.toString()}`
+		);
+	} catch (e) {
+		console.log("image fetch error:", e);
+	}
+
+	const imageUrl = `${
+		process.env.PUBLIC_URL
+	}/api/details-img?${params.toString()}`;
+
+	return c.res({
+		image: (
+			<Box display="flex">
+				<Image src={imageUrl} objectFit="contain" />
+			</Box>
+		),
+		intents: [
+			<Button.Link href="https://cast.game/about">Learn more</Button.Link>,
+			<Button.Link href={`https://warpcast.com/~/channel/${channel.id}`}>
+				/{channel.id}
+			</Button.Link>,
+			<Button action={`/ticket/${previousState.castHash}`}>↩</Button>,
+		],
+	});
+});
+
+// @ts-ignore
+app.image("/details-img", (c) => {
+	const reqJSON = c.req.query();
+	const json = removeAmpFromKeys(reqJSON);
+	const {
+		title,
+		channelId,
+		imageUrl,
+		tradingEnd,
+		rewardPool,
+		txCount,
+		userCount,
+	} = json;
 
 	return c.res({
 		image: (
@@ -701,27 +749,34 @@ app.frame("/details", async (c) => {
 							}}
 						>
 							<img
-								src={channel.image_url}
+								src={imageUrl}
 								style={{
 									width: "50px",
 									height: "50px",
 									borderRadius: "50%",
 								}}
 							/>
-							<span>/{channel.id}</span>
+							<span>/{channelId}</span>
 						</div>
 					</div>
-					<span style={{ fontSize: "3.5rem", fontWeight: 600 }}>
-						Memes Competition
-					</span>
-					<div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+					<span style={{ fontSize: "3.2rem", fontWeight: 600 }}>{title}</span>
+					<div
+						style={{
+							display: "flex",
+							gap: "2rem",
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+							marginBottom: "2rem"
+						}}
+					>
 						<div
 							style={{
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
-								padding: "1.5rem 4rem",
-								minWidth: "380px",
+								padding: "1.5rem 3rem",
+								minWidth: "340px",
 								borderRadius: "10px",
 								backgroundColor: "#E6E6E6",
 								flexDirection: "column",
@@ -736,33 +791,60 @@ app.frame("/details", async (c) => {
 										"https://s2.coinmarketcap.com/static/img/coins/200x200/30096.png"
 									}
 									style={{
-										width: "60px",
-										height: "60px",
+										width: "50px",
+										height: "50px",
 										borderRadius: "50%",
 									}}
 								/>
-								<span style={{ fontSize: "60px", fontWeight: 600 }}>230k</span>
+								<span style={{ fontSize: "50px", fontWeight: 600 }}>
+									{rewardPool}
+								</span>
 							</div>
-							<span style={{ fontSize: "40px" }}>reward pool</span>
+							<span style={{ fontSize: "37px" }}>reward pool</span>
+						</div>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								padding: "1.5rem 3rem",
+								minWidth: "320px",
+								borderRadius: "10px",
+								backgroundColor: "#E6E6E6",
+								flexDirection: "column",
+								gap: "5px",
+							}}
+						>
+							<span style={{ fontSize: "50px", fontWeight: 600 }}>
+								{txCount}
+							</span>
+							<span style={{ fontSize: "37px" }}>transactions</span>
+						</div>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								padding: "1.5rem 3rem",
+								minWidth: "320px",
+								borderRadius: "10px",
+								backgroundColor: "#E6E6E6",
+								flexDirection: "column",
+								gap: "5px",
+							}}
+						>
+							<span style={{ fontSize: "50px", fontWeight: 600 }}>
+								{userCount}
+							</span>
+							<span style={{ fontSize: "37px" }}>participants</span>
 						</div>
 					</div>
-
-					<span>Trading ends in 12 hours.</span>
+					<span>Trading ends in {tradingEnd}.</span>
 				</div>
 			</div>
 		),
-		intents: [
-			<Button.Link href="https://cast.game/about">cast.game</Button.Link>,
-			<Button.Link href={`https://warpcast.com/~/channel/${channel.id}`}>
-				/{channel.id}
-			</Button.Link>,
-			<Button action={`/ticket/${previousState.castHash}`}>↩</Button>,
-		],
 	});
 });
-
-// @ts-ignore
-app.image("/details-img", (c) => {});
 
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
