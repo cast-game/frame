@@ -674,7 +674,7 @@ app.frame("/details", async (c) => {
 
 	// TODO: get channelId from db
 	const [channel, details] = await Promise.all([
-		await getChannel("memes"),
+		await getChannel("castgame"),
 		await getDetails(),
 	]);
 
