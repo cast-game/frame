@@ -233,8 +233,27 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 		if (cast) previousState.castHash = cast.hash;
 	});
 
+	const castImageUrl = `https://client.warpcast.com/v2/cast-image?castHash=${cast.hash}`;
+
 	return c.res({
-		image: `https://client.warpcast.com/v2/cast-image?castHash=${cast.hash}`,
+		image: (
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "center",
+					padding: "2rem",
+					backgroundColor: "#370b70"
+				}}
+			>
+				<img
+					src={castImageUrl}
+					style={{
+						height: "100%",
+						borderRadius: "10px",
+					}}
+				/>
+			</div>
+		),
 		intents: [
 			<Button.AddCastAction action="/action">
 				Install Action
@@ -758,7 +777,11 @@ app.image("/details-img", (c) => {
 							<span>/{channelId}</span>
 						</div>
 					</div>
-					<span style={{ fontSize: "3.2rem", fontWeight: 600, marginTop: ".4rem" }}>{title}</span>
+					<span
+						style={{ fontSize: "3.2rem", fontWeight: 600, marginTop: ".4rem" }}
+					>
+						{title}
+					</span>
 					<div
 						style={{
 							display: "flex",
@@ -766,7 +789,7 @@ app.image("/details-img", (c) => {
 							alignItems: "center",
 							justifyContent: "center",
 							width: "100%",
-							margin: "1.7rem 0"
+							margin: "1.7rem 0",
 						}}
 					>
 						<div
