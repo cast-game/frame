@@ -242,7 +242,7 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 					display: "flex",
 					justifyContent: "center",
 					padding: "2rem",
-					backgroundColor: "#370b70"
+					backgroundColor: "#370b70",
 				}}
 			>
 				<img
@@ -530,8 +530,8 @@ app.image("/ticket-img", async (c) => {
 							width: "100%",
 						}}
 					>
-						<span>Tickets minted</span>
-						<span style={{ fontWeight: 600 }}>{supply}</span>
+						<span style={{ fontSize: "4.2rem" }}>Tickets minted</span>
+						<span style={{ fontWeight: 600, fontSize: "4.5rem" }}>{supply}</span>
 						{/* {pfps.map((pfp: string) => (
 							<img
 								src={pfp}
@@ -548,7 +548,7 @@ app.image("/ticket-img", async (c) => {
 						style={{
 							display: "flex",
 							justifyContent: "flex-start",
-							fontSize: "4rem",
+							fontSize: "4.2rem",
 							width: "100%",
 						}}
 					>
@@ -576,10 +576,9 @@ app.image("/ticket-img", async (c) => {
 						style={{
 							display: "flex",
 							justifyContent: "space-between",
-							fontSize: "4rem",
 						}}
 					>
-						<span>Buy Price</span>
+						<span style={{ fontSize: "4.2rem" }}>Buy Price</span>
 						<div
 							style={{
 								display: "flex",
@@ -596,7 +595,7 @@ app.image("/ticket-img", async (c) => {
 							>
 								${buyPriceFiat}
 							</span> */}
-							<span style={{ fontWeight: "700" }}>
+							<span style={{ fontWeight: "700", fontSize: "4.5rem" }}>
 								{buyPrice} {tokenSymbol}
 							</span>
 						</div>
@@ -608,7 +607,7 @@ app.image("/ticket-img", async (c) => {
 							fontSize: "4rem",
 						}}
 					>
-						<span>Sell Price</span>
+						<span style={{ fontSize: "4.2rem" }}>Sell Price</span>
 						<div
 							style={{
 								display: "flex",
@@ -625,7 +624,7 @@ app.image("/ticket-img", async (c) => {
 							>
 								${sellPriceFiat}
 							</span> */}
-							<span style={{ fontWeight: "700" }}>
+							<span style={{ fontWeight: "700", fontSize: "4.5rem" }}>
 								{sellPrice} {tokenSymbol}
 							</span>
 						</div>
