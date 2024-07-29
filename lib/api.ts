@@ -193,15 +193,24 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 					100000
 			) / 100000;
 
-		const balance = await queryData(`{
-        user(id: "${user.verifications[0]?.toLowerCase() ?? "0x0"}:${
-			cast.hash
-		}") {
-            ticketBalance
-        }
-        }`);
+		const res = await queryData(`{
+			users(where: {id_ends_with: "${cast.hash}"}) {
+				items {
+					id
+					ticketBalance
+				}
+			}
+		}`);
 
-		const ticketsOwned = balance.user ? Number(balance.user.ticketBalance) : 0;
+		let ticketsOwned: number = 0;
+		const userAddresses = [user.custody_address, ...user.verifications];
+
+		res.users.items.forEach((user: any) => {
+			if (userAddresses.includes(user.id.split(":")[0])) {
+				ticketsOwned += Number(user.ticketBalance);
+			}
+		});
+
 		const buyPriceFiat = (tokenPrice * buyPrice).toFixed(2);
 		const sellPriceFiat = (tokenPrice * sellPrice).toFixed(2);
 
