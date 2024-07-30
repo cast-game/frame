@@ -18,7 +18,7 @@ import { parseEther, zeroAddress } from "viem";
 import { generateSignature } from "../lib/contract.js";
 import { getData, getDetails } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
-import { Box, Image } from "./ui.js";
+import { Box, Image, Text } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -380,9 +380,9 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 			author,
 			authorPfp,
 			buyPrice: buyPrice.toString(),
-			buyPriceFiat: buyPriceFiat.toString(),
+			// buyPriceFiat: buyPriceFiat.toString(),
 			sellPrice: sellPrice.toString(),
-			sellPriceFiat: sellPriceFiat.toString(),
+			// sellPriceFiat: sellPriceFiat.toString(),
 			supply: supply.toString(),
 			ticketsOwned: ticketsOwned.toString(),
 			scv: scv.toString(),
@@ -506,6 +506,7 @@ app.image("/ticket-img", async (c) => {
 						display: "flex",
 						justifyContent: "space-between",
 						width: "100%",
+						marginBottom: "1rem"
 					}}
 				>
 					<div style={{ display: "flex", alignItems: "center" }}>
@@ -539,21 +540,11 @@ app.image("/ticket-img", async (c) => {
 					</div>
 					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
 						<span style={{ fontWeight: 600 }}>SCV</span>
-						<div
-							style={{
-								display: "flex",
-								// alignItems: "center",
-								// justifyContent: "center",
-								borderRadius: "50%",
-								backgroundColor: "#45A3B8",
-								padding: "1rem 2rem",
-								fontSize: "3rem",
-								fontWeight: 700,
-								color: "white",
-							}}
-						>
-							{scv}
-						</div>
+						<Box display="flex" backgroundColor="blue800" padding="12" borderRadius="128">
+							<Text size="48" color="text">
+								{scv}
+							</Text>
+						</Box>
 					</div>
 					{/* <span style={{ fontWeight: 700 }}>/{channelId}</span> */}
 				</div>
@@ -592,10 +583,10 @@ app.image("/ticket-img", async (c) => {
 						<span
 							style={{
 								gap: "1rem",
-								fontSize: "5rem",
+								fontSize: "4.3rem",
 							}}
 						>
-							Earn <b style={{ color: "#ad0e6e" }}>double rewards</b> as the
+							Earn potential <b style={{ color: "#108f36" }}>double rewards</b> as the
 							first buyer!
 						</span>
 					</div>
