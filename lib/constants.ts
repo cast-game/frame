@@ -27,8 +27,10 @@ export const getSCVQuery = (castHash: string) => `{
       Cast {
         socialCapitalValue {
           formattedValue
-          rawValue
         }
+				notaTokenEarned {
+					formattedValue
+				}
       }
     }
   }`;

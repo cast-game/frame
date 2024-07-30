@@ -287,6 +287,8 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 	const {
 		author,
+		authorPfp,
+		scv,
 		buyPrice,
 		buyPriceFiat,
 		sellPrice,
@@ -376,12 +378,14 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 		const params = new URLSearchParams({
 			author,
+			authorPfp,
 			buyPrice: buyPrice.toString(),
 			buyPriceFiat: buyPriceFiat.toString(),
 			sellPrice: sellPrice.toString(),
 			sellPriceFiat: sellPriceFiat.toString(),
 			supply: supply.toString(),
 			ticketsOwned: ticketsOwned.toString(),
+			scv: scv.toString(),
 			// topHoldersPfps: topHoldersPfps.toString(),
 			ownershipPercentage: ownershipPercentage.toString(),
 			channelId: cast.channel.id,
@@ -465,10 +469,12 @@ app.image("/ticket-img", async (c) => {
 	const json = removeAmpFromKeys(reqJSON);
 	const {
 		author,
+		authorPfp,
+		scv,
 		supply,
-		buyPriceFiat,
+		// buyPriceFiat,
 		buyPrice,
-		sellPriceFiat,
+		// sellPriceFiat,
 		sellPrice,
 		ticketsOwned,
 		// topHoldersPfps,
@@ -516,11 +522,40 @@ app.image("/ticket-img", async (c) => {
 								}}
 							>
 								Cast by
-								<span style={{ fontWeight: 700 }}>@{author}</span>
+								<div style={{ display: "flex", alignItems: "center" }}>
+									<img
+										src={authorPfp}
+										style={{
+											margin: "0 1rem",
+											height: "70px",
+											width: "70px",
+											borderRadius: "50%",
+										}}
+									/>
+									<span style={{ fontWeight: 700 }}>@{author}</span>
+								</div>
 							</span>
 						</div>
 					</div>
-					<span style={{ fontWeight: 700 }}>/{channelId}</span>
+					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+						<span style={{ fontWeight: 600 }}>SCV</span>
+						<div
+							style={{
+								display: "flex",
+								// alignItems: "center",
+								// justifyContent: "center",
+								borderRadius: "50%",
+								backgroundColor: "#45A3B8",
+								padding: "1rem 2rem",
+								fontSize: "3rem",
+								fontWeight: 700,
+								color: "white",
+							}}
+						>
+							{scv}
+						</div>
+					</div>
+					{/* <span style={{ fontWeight: 700 }}>/{channelId}</span> */}
 				</div>
 				{Number(supply) > 0 ? (
 					<div
@@ -533,9 +568,7 @@ app.image("/ticket-img", async (c) => {
 						}}
 					>
 						<span style={{ fontSize: "4.5rem" }}>Tickets minted</span>
-						<span style={{ fontWeight: 600, fontSize: "5rem" }}>
-							{supply}
-						</span>
+						<span style={{ fontWeight: 600, fontSize: "5rem" }}>{supply}</span>
 						{/* {pfps.map((pfp: string) => (
 							<img
 								src={pfp}
@@ -559,7 +592,7 @@ app.image("/ticket-img", async (c) => {
 						<span
 							style={{
 								gap: "1rem",
-								fontSize: "5rem"
+								fontSize: "5rem",
 							}}
 						>
 							Earn <b style={{ color: "#ad0e6e" }}>double rewards</b> as the

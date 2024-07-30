@@ -2,15 +2,20 @@ import {
 	apiEndpoint,
 	cmcEndpoint,
 	gameAddress,
+	getSCVQuery,
 	priceTiers,
 } from "./constants.js";
 import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { getUser } from "./neynar.js";
 import { formatEther, parseEther } from "viem";
 import { client } from "./contract.js";
+import { init, fetchQuery } from "@airstack/node";
+init(process.env.AIRSTACK_API_KEY!);
 
 interface TicketData {
 	author: string;
+	authorPfp: string;
+	scv: number;
 	buyPrice: number;
 	buyPriceFiat: string;
 	sellPrice: number;
@@ -137,9 +142,9 @@ export const getDetails = async () => {
 };
 
 export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
-	const [user, ticketDetails, tokenPrice] = await Promise.all([
-		await getUser(fid),
-		await queryData(`{
+	const [user, ticketDetails, tokenPrice, scvRes] = await Promise.all([
+		getUser(fid),
+		queryData(`{
     ticket(id: "${cast.hash}") {
         activeTier
         channelId
@@ -147,7 +152,20 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
         supply
     }}`),
 		getFiatValue(1),
+		fetchQuery(getSCVQuery(cast.hash)),
 	]);
+	const scvData = scvRes.data.FarcasterCasts.Cast[0];
+	const scv =
+		scvData.socialCapitalValue !== null
+			? scvData.socialCapitalValue.formattedValue
+			: 0;
+
+	const notaTokenEarned =
+		scvData.notaTokenEarned !== null
+			? scvData.notaTokenEarned.formattedValue
+			: 0;
+
+	const totalScv = (Number(scv) + Number(notaTokenEarned)).toFixed(2);
 
 	// let topHoldersPfps: string[] = [];
 
@@ -168,6 +186,8 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 
 		return {
 			author: cast.author.username,
+			authorPfp: cast.author.pfp_url ?? "",
+			scv: Number(totalScv),
 			buyPrice: startingPrice,
 			buyPriceFiat,
 			// buy price minus fees
@@ -216,6 +236,8 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 
 		return {
 			author: cast.author.username,
+			authorPfp: cast.author.pfp_url ?? "",
+			scv,
 			buyPrice,
 			buyPriceFiat,
 			sellPrice,
