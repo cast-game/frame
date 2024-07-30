@@ -378,7 +378,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 		const params = new URLSearchParams({
 			author,
-			authorPfp,
+			// authorPfp,
 			buyPrice: buyPrice.toString(),
 			// buyPriceFiat: buyPriceFiat.toString(),
 			sellPrice: sellPrice.toString(),
@@ -469,7 +469,7 @@ app.image("/ticket-img", async (c) => {
 	const json = removeAmpFromKeys(reqJSON);
 	const {
 		author,
-		authorPfp,
+		// authorPfp,
 		scv,
 		supply,
 		// buyPriceFiat,
@@ -524,7 +524,7 @@ app.image("/ticket-img", async (c) => {
 							>
 								Cast by
 								<div style={{ display: "flex", alignItems: "center" }}>
-									<img
+									{/* <img
 										src={authorPfp}
 										style={{
 											margin: "0 1rem",
@@ -532,7 +532,7 @@ app.image("/ticket-img", async (c) => {
 											width: "70px",
 											borderRadius: "50%",
 										}}
-									/>
+									/> */}
 									<span style={{ fontWeight: 700 }}>@{author}</span>
 								</div>
 							</span>
