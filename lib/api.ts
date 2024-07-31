@@ -157,15 +157,15 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 	const scvData = scvRes.data.FarcasterCasts.Cast[0];
 	const scv =
 		scvData.socialCapitalValue !== null
-			? scvData.socialCapitalValue.formattedValue
+			? scvData.socialCapitalValue.formattedValue.toFixed(2)
 			: 0;
 
 	const notaTokenEarned =
 		scvData.notaTokenEarned !== null
-			? scvData.notaTokenEarned.formattedValue
+			? scvData.notaTokenEarned.formattedValue.toFixed(2)
 			: 0;
 
-	const totalScv = (Number(scv) + Number(notaTokenEarned)).toFixed(2);
+	const totalScv = Number(scv) + Number(notaTokenEarned).toFixed(2);
 
 	// let topHoldersPfps: string[] = [];
 

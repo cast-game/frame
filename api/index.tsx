@@ -285,18 +285,8 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		? await getCast(previousState.castHash)
 		: c.var.cast;
 
-	const {
-		author,
-		authorPfp,
-		scv,
-		buyPrice,
-		buyPriceFiat,
-		sellPrice,
-		sellPriceFiat,
-		supply,
-		// topHoldersPfps,
-		ticketsOwned,
-	} = await getData(cast, c.var.interactor.fid);
+	const { author, scv, buyPrice, sellPrice, supply, ticketsOwned } =
+		await getData(cast, c.var.interactor.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
@@ -374,21 +364,17 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 			);
 		}
 
-		const ownershipPercentage = Math.ceil((ticketsOwned / supply) * 100);
+		const ownershipPercentage =
+			ticketsOwned === 0 ? 0 : Math.ceil((ticketsOwned / supply) * 100);
 
 		const params = new URLSearchParams({
 			author,
-			// authorPfp,
 			buyPrice: buyPrice.toString(),
-			// buyPriceFiat: buyPriceFiat.toString(),
 			sellPrice: sellPrice.toString(),
-			// sellPriceFiat: sellPriceFiat.toString(),
 			supply: supply.toString(),
 			ticketsOwned: ticketsOwned.toString(),
 			scv: scv.toString(),
-			// topHoldersPfps: topHoldersPfps.toString(),
 			ownershipPercentage: ownershipPercentage.toString(),
-			channelId: cast.channel.id,
 		});
 
 		try {
@@ -469,17 +455,12 @@ app.image("/ticket-img", async (c) => {
 	const json = removeAmpFromKeys(reqJSON);
 	const {
 		author,
-		// authorPfp,
 		scv,
 		supply,
-		// buyPriceFiat,
 		buyPrice,
-		// sellPriceFiat,
 		sellPrice,
 		ticketsOwned,
-		// topHoldersPfps,
 		ownershipPercentage,
-		channelId,
 	} = json;
 
 	// const pfps = topHoldersPfps.split(",");
@@ -495,7 +476,7 @@ app.image("/ticket-img", async (c) => {
 					width: "100%",
 					height: "100%",
 					padding: "6.5rem 7rem",
-					fontSize: "3.5rem",
+					fontSize: "3.3rem",
 					gap: "2rem",
 					alignItems: "center",
 					position: "relative",
@@ -506,47 +487,32 @@ app.image("/ticket-img", async (c) => {
 						display: "flex",
 						justifyContent: "space-between",
 						width: "100%",
-						marginBottom: "1rem"
+						marginBottom: "1rem",
+						alignItems: "center",
 					}}
 				>
-					<div style={{ display: "flex", alignItems: "center" }}>
+					<span
+						style={{
+							gap: ".8rem",
+						}}
+					>
+						Cast by
+						<span style={{ fontWeight: 700 }}>@{author}</span>
+					</span>
+					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+						<span style={{ fontWeight: 600 }}>SCV</span>
 						<div
 							style={{
 								display: "flex",
+								padding: ".5rem 1.5rem",
+								background: "linear-gradient(90deg, #45A3B8 0%, #23B68A 100%)",
 								alignItems: "center",
-								gap: "1rem",
+								color: "white",
+								fontWeight: 600,
+								borderRadius: "10px",
 							}}
-						>
-							<span
-								style={{
-									gap: ".8rem",
-								}}
-							>
-								Cast by
-								<div style={{ display: "flex", alignItems: "center" }}>
-									{/* <img
-										src={authorPfp}
-										style={{
-											margin: "0 1rem",
-											height: "70px",
-											width: "70px",
-											borderRadius: "50%",
-										}}
-									/> */}
-									<span style={{ fontWeight: 700 }}>@{author}</span>
-								</div>
-							</span>
-						</div>
+						>{scv}</div>
 					</div>
-					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-						<span style={{ fontWeight: 600 }}>SCV</span>
-						<Box display="flex" backgroundColor="blue800" padding="12" borderRadius="128">
-							<Text size="48" color="text">
-								{scv}
-							</Text>
-						</Box>
-					</div>
-					{/* <span style={{ fontWeight: 700 }}>/{channelId}</span> */}
 				</div>
 				{Number(supply) > 0 ? (
 					<div
@@ -586,8 +552,8 @@ app.image("/ticket-img", async (c) => {
 								fontSize: "4.3rem",
 							}}
 						>
-							Earn potential <b style={{ color: "#108f36" }}>double rewards</b> as the
-							first buyer!
+							Earn potential <b style={{ color: "#108f36" }}>double rewards</b>{" "}
+							as the first buyer!
 						</span>
 					</div>
 				)}
@@ -608,26 +574,9 @@ app.image("/ticket-img", async (c) => {
 						}}
 					>
 						<span style={{ fontSize: "4.5rem" }}>Buy Price</span>
-						<div
-							style={{
-								display: "flex",
-								alignItems: "center",
-								gap: "1.2rem",
-							}}
-						>
-							{/* <span
-								style={{
-									fontWeight: "600",
-									fontSize: "3.2rem",
-									opacity: ".6",
-								}}
-							>
-								${buyPriceFiat}
-							</span> */}
-							<span style={{ fontWeight: "700", fontSize: "5rem" }}>
-								{buyPrice} {tokenSymbol}
-							</span>
-						</div>
+						<span style={{ fontWeight: "700", fontSize: "5rem" }}>
+							{buyPrice} {tokenSymbol}
+						</span>
 					</div>
 					<div
 						style={{
@@ -637,26 +586,9 @@ app.image("/ticket-img", async (c) => {
 						}}
 					>
 						<span style={{ fontSize: "4.5rem" }}>Sell Price</span>
-						<div
-							style={{
-								display: "flex",
-								alignItems: "center",
-								gap: "1.2rem",
-							}}
-						>
-							{/* <span
-								style={{
-									fontWeight: "600",
-									fontSize: "3.2rem",
-									opacity: ".6",
-								}}
-							>
-								${sellPriceFiat}
-							</span> */}
-							<span style={{ fontWeight: "700", fontSize: "5rem" }}>
-								{sellPrice} {tokenSymbol}
-							</span>
-						</div>
+						<span style={{ fontWeight: "700", fontSize: "5rem" }}>
+							{sellPrice} {tokenSymbol}
+						</span>
 					</div>
 					<div
 						style={{
