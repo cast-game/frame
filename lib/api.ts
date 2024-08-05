@@ -165,7 +165,7 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 			? scvData.notaTokenEarned.formattedValue.toFixed(2)
 			: 0;
 
-	const totalScv = Number(scv) + Number(notaTokenEarned).toFixed(2);
+	const totalScv = (Number(scv) + Number(notaTokenEarned)).toFixed(2);
 
 	// let topHoldersPfps: string[] = [];
 
