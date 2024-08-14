@@ -34,6 +34,7 @@ export const ticketsContract = getContract({
 export const generateSignature = async (
   castHash: string,
   castCreator: string,
+  senderFid: bigint,
   amount: bigint,
   price: bigint,
   referrer: string = zeroAddress
@@ -41,10 +42,11 @@ export const generateSignature = async (
   const nonce = await gameContract.read.nonce([castHash]);
   const hash = keccak256(
     encodePacked(
-      ["string", "address", "uint256", "uint256", "address", "uint256"],
+      ["string", "address", "uint256", "uint256", "uint256", "address", "uint256"],
       [
         castHash,
         castCreator as `0x${string}`,
+        senderFid,
         amount,
         price,
         referrer as `0x${string}`,
