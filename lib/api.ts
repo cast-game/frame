@@ -248,3 +248,11 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
     };
   }
 };
+
+export const createWarpcastLink = (content: string, embedUrl: string): string => {
+  const baseUrl = "https://warpcast.com/~/compose?text=";
+  const encodedContent = encodeURIComponent(content);
+  const encodedEmbedUrl = encodeURIComponent(embedUrl);
+  
+  return `${baseUrl}${encodedContent}&embeds%5B%5D=${encodedEmbedUrl}`;
+}

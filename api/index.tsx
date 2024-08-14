@@ -16,7 +16,7 @@ import {
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress, encodeAbiParameters } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { getData, getDetails } from "../lib/api.js";
+import { createWarpcastLink, getData, getDetails } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image, Text } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
@@ -84,34 +84,34 @@ export const app = new Frog<State>({
 }) as any;
 
 app.castAction(
-	"/action",
-	neynarMiddleware,
-	// @ts-ignore
-	async (c) => {
-		// const round = await prisma.round.findFirst();
-		// const castCreatedTime = new Date(c.var.cast.timestamp);
-		// if (
-		// 	round &&
-		// 	round.url === c.var.cast.parentUrl &&
-		// 	round.startTime < castCreatedTime &&
-		// 	round.tradingEnd > castCreatedTime
-		// ) {
-		if (c.var.cast.channel === null) {
-			return c.error({
-				message: "This cast is not eligible for the current round",
-			});
-		}
+  "/action",
+  neynarMiddleware,
+  // @ts-ignore
+  async (c) => {
+    // const round = await prisma.round.findFirst();
+    // const castCreatedTime = new Date(c.var.cast.timestamp);
+    // if (
+    // 	round &&
+    // 	round.url === c.var.cast.parentUrl &&
+    // 	round.startTime < castCreatedTime &&
+    // 	round.tradingEnd > castCreatedTime
+    // ) {
+    if (c.var.cast.channel === null) {
+      return c.error({
+        message: "This cast is not eligible for the current round",
+      });
+    }
 
-		return c.frame({
-			path: `/trade`,
-		});
-		// } else {
-		// 	return c.error({
-		// 		message: "This cast is not eligible for the current round",
-		// 	});
-		// }
-	},
-	{ name: "cast.game ticket", icon: "tag" }
+    return c.frame({
+      path: `/trade`,
+    });
+    // } else {
+    // 	return c.error({
+    // 		message: "This cast is not eligible for the current round",
+    // 	});
+    // }
+  },
+  { name: "cast.game ticket", icon: "tag" }
 );
 
 // @ts-ignore
@@ -280,10 +280,13 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
       </div>
     ),
     intents: [
-      <Button.AddCastAction action="/action">
-        Install Action
-      </Button.AddCastAction>,
-      <Button action={`/trade`}>Ticket</Button>,
+      <Button action={`/trade`}>Trade</Button>,
+      <Button.Link href="https://cast.game/about">?</Button.Link>,
+      <Button.Link
+        href={`https://warpcast.com/${cast.author.username}/${cast.hash}`}
+      >
+        Cast
+      </Button.Link>,
     ],
   });
 });
@@ -423,8 +426,12 @@ app.frame("/trade", neynarMiddleware, async (c) => {
   const getIntents = () => {
     if (state.txHash) {
       if (state.indexed) {
+        const referralLink = createWarpcastLink(
+          "I just traded this cast with /castgame! Join the social betting game in the frame below:",
+          `${process.env.PUBLIC_URL}/api/ticket/${state.castHash}`
+        );
         return [
-          <Button.Link href={"https://cast.game"}>Share 🗣️</Button.Link>,
+          <Button.Link href={referralLink}>Share 🗣️</Button.Link>,
           <Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
             Transaction
           </Button.Link>,
@@ -448,8 +455,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
     let buttons = [
       <Button.Transaction target="/buy">Buy</Button.Transaction>,
-      <Button value="refresh">Refresh</Button>,
-      <Button action={`/details`}>Details</Button>,
+      <Button action={`/details`}>Stats</Button>,
     ];
 
     if (ticketsOwned > 0) {
@@ -698,10 +704,10 @@ app.frame("/details", async (c) => {
       </Box>
     ),
     intents: [
-      <Button.Link href="https://cast.game/about">Learn more</Button.Link>,
-      <Button.Link href={`https://warpcast.com/~/channel/${channel.id}`}>
-        /{channel.id}
-      </Button.Link>,
+      <Button.AddCastAction action="/action">
+        Install Action
+      </Button.AddCastAction>,
+      <Button.Link href="https://cast.game">Web</Button.Link>,
       <Button action={`/trade`}>↩</Button>,
     ],
   });
