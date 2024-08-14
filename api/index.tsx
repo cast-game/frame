@@ -83,36 +83,36 @@ export const app = new Frog<State>({
   },
 }) as any;
 
-// app.castAction(
-// 	"/action",
-// 	neynarMiddleware,
-// 	// @ts-ignore
-// 	async (c) => {
-// 		// const round = await prisma.round.findFirst();
-// 		// const castCreatedTime = new Date(c.var.cast.timestamp);
-// 		// if (
-// 		// 	round &&
-// 		// 	round.url === c.var.cast.parentUrl &&
-// 		// 	round.startTime < castCreatedTime &&
-// 		// 	round.tradingEnd > castCreatedTime
-// 		// ) {
-// 		if (c.var.cast.channel === null) {
-// 			return c.error({
-// 				message: "This cast is not eligible for the current round",
-// 			});
-// 		}
+app.castAction(
+	"/action",
+	neynarMiddleware,
+	// @ts-ignore
+	async (c) => {
+		// const round = await prisma.round.findFirst();
+		// const castCreatedTime = new Date(c.var.cast.timestamp);
+		// if (
+		// 	round &&
+		// 	round.url === c.var.cast.parentUrl &&
+		// 	round.startTime < castCreatedTime &&
+		// 	round.tradingEnd > castCreatedTime
+		// ) {
+		if (c.var.cast.channel === null) {
+			return c.error({
+				message: "This cast is not eligible for the current round",
+			});
+		}
 
-// 		return c.frame({
-// 			path: `/trade`,
-// 		});
-// 		// } else {
-// 		// 	return c.error({
-// 		// 		message: "This cast is not eligible for the current round",
-// 		// 	});
-// 		// }
-// 	},
-// 	{ name: "cast.game ticket", icon: "tag" }
-// );
+		return c.frame({
+			path: `/trade`,
+		});
+		// } else {
+		// 	return c.error({
+		// 		message: "This cast is not eligible for the current round",
+		// 	});
+		// }
+	},
+	{ name: "cast.game ticket", icon: "tag" }
+);
 
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
