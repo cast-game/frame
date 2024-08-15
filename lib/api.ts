@@ -74,7 +74,6 @@ export const getPriceForTicket = async (
   const ticketDetails = await queryData(`{
     ticket(id: "${castHash}") {
         activeTier
-        channelId
         holders
         supply
     }}`);
@@ -147,7 +146,6 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
     queryData(`{
     ticket(id: "${cast.hash}") {
         activeTier
-        channelId
         holders
         supply
     }}`),
