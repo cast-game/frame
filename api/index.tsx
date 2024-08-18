@@ -18,7 +18,7 @@ import { parseEther, zeroAddress, encodeAbiParameters } from "viem";
 import { generateSignature } from "../lib/contract.js";
 import { createWarpcastLink, getData, getDetails } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
-import { Box, Image, Text } from "./ui.js";
+import { Box, Image } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -537,7 +537,7 @@ app.image("/ticket-img", async (c) => {
               gap: "1rem",
             }}
           >
-            <span style={{ fontWeight: 600 }}>SCV</span>
+            <span style={{ fontWeight: 600 }}>Score</span>
             <div
               style={{
                 display: "flex",
@@ -591,7 +591,7 @@ app.image("/ticket-img", async (c) => {
                 fontSize: "4.3rem",
               }}
             >
-              Earn potential <b style={{ color: "#108f36" }}>double rewards</b>{" "}
+              Get <b style={{ color: "#108f36" }}>double earning power</b>{" "}
               as the first buyer!
             </span>
           </div>
