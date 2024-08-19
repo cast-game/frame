@@ -708,6 +708,7 @@ app.frame("/details", async (c) => {
 		if (previousState.castHash) {
 			intents.push(<Button action={`/trade`}>↩</Button>);
 		}
+		return intents;
 	};
 
 	return c.res({
