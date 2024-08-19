@@ -281,7 +281,7 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 		),
 		intents: [
 			<Button action={`/trade`}>Trade</Button>,
-			<Button.Link href="https://cast.game/about">?</Button.Link>,
+			<Button.Link href="https://cast.game/about">Learn more</Button.Link>,
 			<Button.Link
 				href={`https://warpcast.com/${cast.author.username}/${cast.hash}`}
 			>
