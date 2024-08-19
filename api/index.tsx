@@ -19,7 +19,7 @@ import { generateSignature } from "../lib/contract.js";
 import { createWarpcastLink, getData, getDetails } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
-import { prisma } from "../lib/prisma.js";
+// import { prisma } from "../lib/prisma.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
@@ -88,22 +88,28 @@ app.castAction(
 	neynarMiddleware,
 	// @ts-ignore
 	async (c) => {
-		const round = await prisma.round.findFirst();
-		const castCreatedTime = new Date(c.var.cast.timestamp);
-		if (
-			round &&
-			round.channelUrl === c.var.cast.parentUrl &&
-			round.start < castCreatedTime &&
-			round.end > castCreatedTime
-		) {
-			return c.frame({
-				path: `/trade`,
+		// const round = await prisma.round.findFirst();
+		// const castCreatedTime = new Date(c.var.cast.timestamp);
+		// if (
+		// 	round &&
+		// 	round.url === c.var.cast.parentUrl &&
+		// 	round.startTime < castCreatedTime &&
+		// 	round.tradingEnd > castCreatedTime
+		// ) {
+		if (c.var.cast.channel === null) {
+			return c.error({
+				message: "This cast is not eligible for the current round",
 			});
 		}
 
-		return c.error({
-			message: "This cast is not eligible for the current round",
+		return c.frame({
+			path: `/trade`,
 		});
+		// } else {
+		// 	return c.error({
+		// 		message: "This cast is not eligible for the current round",
+		// 	});
+		// }
 	},
 	{ name: "cast.game ticket", icon: "tag" }
 );
