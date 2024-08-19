@@ -427,7 +427,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		if (state.txHash) {
 			if (state.indexed) {
 				const referralLink = createWarpcastLink(
-					"I just traded this cast with /castgame! Join the social betting game in the frame below:",
+					"I just placed a bet on this cast with /castgame! Trade cast tickets and join the social betting game yourself:",
 					`${process.env.PUBLIC_URL}/api/ticket/${state.castHash}`
 				);
 				return [
