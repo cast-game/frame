@@ -123,6 +123,7 @@ app.castAction(
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
 	const { previousState, frameData, inputText } = c;
+	const amount = inputText ? BigInt(inputText) : 1n;
 
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
@@ -145,14 +146,14 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 	const price = getPrice(
 		previousState.details.activeTier,
 		previousState.details.supply,
-		Number(inputText ?? 1)
+		inputText ? Number(inputText) : 1
 	).toString();
 
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor.fid),
-		BigInt(inputText ?? 1),
+		amount,
 		parseEther(price),
 		referrer
 	);
@@ -168,7 +169,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		[
 			previousState.creator.address,
 			BigInt(c.var.interactor.fid),
-			BigInt(inputText ?? 1),
+			amount,
 			parseEther(price),
 			referrer as `0x${string}`,
 		]
@@ -189,6 +190,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 // @ts-ignore
 app.transaction("/sell", neynarMiddleware, async (c) => {
 	const { previousState, frameData, inputText } = c;
+	const amount = inputText ? BigInt(inputText) : 1n;
 
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
@@ -209,7 +211,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 	const price = getPrice(
 		previousState.details.activeTier,
 		previousState.details.supply,
-		Number(inputText ?? 1),
+		inputText ? Number(inputText) : 1,
 		true
 	).toString();
 
@@ -217,7 +219,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor.fid),
-		BigInt(c.frameData.inputText),
+		amount,
 		parseEther(price),
 		referrer
 	);
@@ -233,7 +235,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		[
 			previousState.creator.address,
 			BigInt(c.var.interactor.fid),
-			BigInt(c.frameData.inputText),
+			amount,
 			parseEther(price),
 			referrer as `0x${string}`,
 		]
@@ -479,7 +481,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 		if (ticketsOwned > 0) {
 			buttons.splice(
-				1,
+				2,
 				0,
 				<Button.Transaction target="/sell">Sell</Button.Transaction>
 			);
