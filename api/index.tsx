@@ -57,7 +57,7 @@ export const app = new Frog<State>({
 	basePath: "/api",
 	initialState: {
 		castHash: null,
-		prices: null,
+		details: null,
 		creator: null,
 		txHash: null,
 		indexed: false,
@@ -253,7 +253,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0x6e09bfd1d1899654224743cc8c4d80e079a96815";
+	const testCastHash = "0xf7d4d26165e0fa5ed5e2a0d19aff0ec9c52267da";
 
 	return c.res({
 		image: <></>,
@@ -344,8 +344,6 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 					? cast.author.verifications[0]
 					: cast.author.custody_address,
 			};
-		}
-		if (supply && activeTier) {
 			previousState.details = {
 				supply: Number(supply),
 				activeTier: Number(activeTier),
