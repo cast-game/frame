@@ -17,7 +17,12 @@ import {
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress, encodeAbiParameters } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { createWarpcastLink, getData, getDetails } from "../lib/api.js";
+import {
+	createWarpcastLink,
+	getData,
+	getDetails,
+	getPrice,
+} from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
@@ -28,9 +33,9 @@ import { Box, Image } from "./ui.js";
 
 type State = {
 	castHash: string | null;
-	prices: {
-		buy: string;
-		sell: string;
+	details: {
+		activeTier: number;
+		supply: number;
 	} | null;
 	creator: {
 		fid: number;
@@ -137,12 +142,18 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		}
 	}
 
+	const price = getPrice(
+		previousState.details.activeTier,
+		previousState.details.supply,
+		Number(inputText ?? 1)
+	).toString();
+
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor.fid),
 		BigInt(inputText ?? 1),
-		parseEther(previousState.prices.buy),
+		parseEther(price),
 		referrer
 	);
 
@@ -158,7 +169,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 			previousState.creator.address,
 			BigInt(c.var.interactor.fid),
 			BigInt(inputText ?? 1),
-			parseEther(previousState.prices.buy),
+			parseEther(price),
 			referrer as `0x${string}`,
 		]
 	);
@@ -171,13 +182,13 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		functionName: "buy",
 		args,
 		to: gameAddress,
-		value: parseEther(previousState.prices.buy),
+		value: parseEther(price),
 	});
 });
 
 // @ts-ignore
 app.transaction("/sell", neynarMiddleware, async (c) => {
-	const { previousState, frameData } = c;
+	const { previousState, frameData, inputText } = c;
 
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
@@ -195,12 +206,19 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		}
 	}
 
+	const price = getPrice(
+		previousState.details.activeTier,
+		previousState.details.supply,
+		Number(inputText ?? 1),
+		true
+	).toString();
+
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor.fid),
 		BigInt(c.frameData.inputText),
-		parseEther(previousState.prices.sell),
+		parseEther(price),
 		referrer
 	);
 
@@ -216,7 +234,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 			previousState.creator.address,
 			BigInt(c.var.interactor.fid),
 			BigInt(c.frameData.inputText),
-			parseEther(previousState.prices.sell),
+			parseEther(price),
 			referrer as `0x${string}`,
 		]
 	);
@@ -313,7 +331,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		? await getCast(previousState.castHash)
 		: c.var.cast;
 
-	const { author, scv, buyPrice, sellPrice, supply, ticketsOwned } =
+	const { author, scv, buyPrice, sellPrice, supply, ticketsOwned, activeTier } =
 		await getData(cast, c.var.interactor.fid);
 
 	// @ts-ignore
@@ -327,11 +345,12 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 					: cast.author.custody_address,
 			};
 		}
-		if (buyPrice)
-			previousState.prices = {
-				buy: buyPrice.toString(),
-				sell: sellPrice.toString(),
+		if (supply && activeTier) {
+			previousState.details = {
+				supply: Number(supply),
+				activeTier: Number(activeTier),
 			};
+		}
 		if (indexed) previousState.indexed = true;
 		if (txError) previousState.txError = true;
 		if (transactionId !== "0x" && transactionId !== undefined)
