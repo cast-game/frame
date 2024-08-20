@@ -3,6 +3,7 @@ import { base, baseSepolia } from "viem/chains";
 export const useMainnet = process.env.USE_MAINNET === "true";
 export const chain = useMainnet ? base : baseSepolia;
 export const chainId = useMainnet ? "eip155:8453" : "eip155:84532";
+export const blockExplorer = useMainnet ? "https://basescan.org" : "https://sepolia.basescan.org";
 
 export const tokenSymbol = "ETH";
 

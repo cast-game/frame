@@ -6,6 +6,7 @@ import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
 import {
 	assetsIpfsHash,
+	blockExplorer,
 	chainId,
 	formatNumber,
 	gameAddress,
@@ -116,7 +117,7 @@ app.castAction(
 
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
-	const { previousState, frameData } = c;
+	const { previousState, frameData, inputText } = c;
 
 	// Check if the frame is a cast
 	let referrer: string = zeroAddress;
@@ -140,7 +141,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor.fid),
-		BigInt(c.frameData.inputText),
+		BigInt(inputText ?? 1),
 		parseEther(previousState.prices.buy),
 		referrer
 	);
@@ -156,7 +157,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		[
 			previousState.creator.address,
 			BigInt(c.var.interactor.fid),
-			BigInt(c.frameData.inputText),
+			BigInt(inputText ?? 1),
 			parseEther(previousState.prices.buy),
 			referrer as `0x${string}`,
 		]
@@ -432,21 +433,21 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 				);
 				return [
 					<Button.Link href={referralLink}>Share 🗣️</Button.Link>,
-					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
+					<Button.Link href={`${blockExplorer}/tx/${state.txHash}`}>
 						Transaction
 					</Button.Link>,
 					<Button value="return">Done</Button>,
 				];
 			} else if (state.txError) {
 				return [
-					<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
+					<Button.Link href={`${blockExplorer}/tx/${state.txHash}`}>
 						View
 					</Button.Link>,
 					<Button value="return">Try again</Button>,
 				];
 			}
 			return [
-				<Button.Link href={`https://www.onceupon.gg/${state.txHash}`}>
+				<Button.Link href={`${blockExplorer}/tx/${state.txHash}`}>
 					View Transaction
 				</Button.Link>,
 				<Button value="refresh">Refresh</Button>,
