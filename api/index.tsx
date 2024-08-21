@@ -702,12 +702,16 @@ app.frame("/details", async (c) => {
 		let intents = [
 			<Button.AddCastAction action="/action">
 				Install Action
-			</Button.AddCastAction>,
-			<Button.Link href="https://cast.game">Dashboard</Button.Link>,
+			</Button.AddCastAction>
 		];
 		if (previousState.castHash) {
 			intents.push(
+				<Button.Link href="https://cast.game">Dashboard</Button.Link>,
 				<Button action={`/trade/${previousState.castHash}`}>↩</Button>
+			);
+		} else {
+			intents.push(
+				<Button.Link href="https://cast.game/about">Learn more</Button.Link>
 			);
 		}
 		return intents;
