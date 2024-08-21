@@ -17,11 +17,7 @@ import {
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress, encodeAbiParameters } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import {
-	createWarpcastLink,
-	getData,
-	getDetails,
-} from "../lib/api.js";
+import { createWarpcastLink, getData, getDetails } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
 // import { prisma } from "../lib/prisma.js";
@@ -108,7 +104,7 @@ app.castAction(
 		}
 
 		return c.frame({
-			path: `/trade`,
+			path: `/trade/${c.var.cast.hash}`,
 		});
 		// } else {
 		// 	return c.error({
@@ -257,10 +253,10 @@ app.frame("/", (c) => {
 // @ts-ignore
 app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	const { req, deriveState } = c;
-	
+
 	const castHash = req.path.split("/")[req.path.split("/").length - 1];
 	let cast = await getCast(castHash);
-	
+
 	// TODO: return error frame if cast is not in round
 
 	// @ts-ignore
@@ -303,7 +299,8 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 
 // @ts-ignore
 app.frame("/trade/:hash", neynarMiddleware, async (c) => {
-	const { req, deriveState, previousState, transactionId, buttonValue }: any = c;
+	const { req, deriveState, previousState, transactionId, buttonValue }: any =
+		c;
 
 	let indexed: boolean;
 	let txError: boolean;
@@ -318,16 +315,10 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 		if (parsed.status === "1") indexed = true;
 	}
 
-	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1])
+	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1]);
 
-	const {
-		author,
-		castScore,
-		buyPrice,
-		sellPrice,
-		supply,
-		ticketsOwned,
-	} = await getData(cast, c.var.interactor.fid);
+	const { author, castScore, buyPrice, sellPrice, supply, ticketsOwned } =
+		await getData(cast, c.var.interactor.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
@@ -715,7 +706,9 @@ app.frame("/details", async (c) => {
 			<Button.Link href="https://cast.game">Dashboard</Button.Link>,
 		];
 		if (previousState.castHash) {
-			intents.push(<Button action={`/trade/${previousState.castHash}`}>↩</Button>);
+			intents.push(
+				<Button action={`/trade/${previousState.castHash}`}>↩</Button>
+			);
 		}
 		return intents;
 	};
