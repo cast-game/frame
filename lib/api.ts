@@ -14,7 +14,7 @@ init(process.env.AIRSTACK_API_KEY!);
 interface TicketData {
 	author: string;
 	authorPfp: string;
-	castScore: number;
+	castScore: number | string;
 	buyPrice: string;
 	sellPrice: string;
 	supply: number;
@@ -121,14 +121,16 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
     }}`),
 		fetchQuery(getSCVQuery(cast.hash)),
 	]);
-	let castScore = valueRes.data.FarcasterCasts.Cast[0].castValue.formattedValue;
-
-	console.log(ticketDetails)
-	// TODO: round up if >10
-	if (castScore >= 10) {
-		castScore = Math.ceil(castScore);
-	} else {
-		castScore = Math.ceil(castScore);
+	let castScore = 0;
+	try {
+		castScore = valueRes.data.FarcasterCasts.Cast[0].castValue.formattedValue;
+		if (castScore >= 10) {
+			castScore = Math.ceil(castScore);
+		} else {
+			castScore = Math.ceil(castScore);
+		}
+	} catch (e) {
+		console.error(valueRes.data.FarcasterCasts.Cast)
 	}
 
 	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
@@ -137,7 +139,7 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 		return {
 			author: cast.author.username,
 			authorPfp: cast.author.pfp_url ?? "",
-			castScore,
+			castScore: castScore > 0 ? castScore : "-",
 			buyPrice: priceTiers[activeTier].basePrice.toString(),
 			sellPrice: priceTiers[activeTier].basePrice.toString(),
 			supply: 0,
