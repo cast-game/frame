@@ -21,7 +21,6 @@ import {
 	createWarpcastLink,
 	getData,
 	getDetails,
-	getPrice,
 } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
@@ -33,9 +32,9 @@ import { Box, Image } from "./ui.js";
 
 type State = {
 	castHash: string | null;
-	details: {
-		activeTier: number;
-		supply: number;
+	prices: {
+		buy: string;
+		sell: string;
 	} | null;
 	creator: {
 		fid: number;
@@ -57,7 +56,7 @@ export const app = new Frog<State>({
 	basePath: "/api",
 	initialState: {
 		castHash: null,
-		details: null,
+		prices: null,
 		creator: null,
 		txHash: null,
 		indexed: false,
@@ -134,7 +133,6 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		].includes(frameData.castId.hash)
 	) {
 		const referralCast = await getCast(frameData.castId.hash);
-		console.log(referralCast);
 
 		if (referralCast.author.fid !== previousState.creator.fid) {
 			referrer = referralCast.author.verifications
@@ -143,18 +141,12 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		}
 	}
 
-	const price = getPrice(
-		previousState.details.activeTier,
-		previousState.details.supply,
-		inputText ? Number(inputText) : 1
-	).toString();
-
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor.fid),
 		amount,
-		parseEther(price),
+		parseEther(previousState.prices.buy),
 		referrer
 	);
 
@@ -170,7 +162,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 			previousState.creator.address,
 			BigInt(c.var.interactor.fid),
 			amount,
-			parseEther(price),
+			parseEther(previousState.prices.buy),
 			referrer as `0x${string}`,
 		]
 	);
@@ -183,7 +175,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		functionName: "buy",
 		args,
 		to: gameAddress,
-		value: parseEther(price),
+		value: parseEther(previousState.prices.buy),
 	});
 });
 
@@ -208,19 +200,12 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		}
 	}
 
-	const price = getPrice(
-		previousState.details.activeTier,
-		previousState.details.supply,
-		inputText ? Number(inputText) : 1,
-		true
-	).toString();
-
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor.fid),
 		amount,
-		parseEther(price),
+		parseEther(previousState.prices.sell),
 		referrer
 	);
 
@@ -236,7 +221,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 			previousState.creator.address,
 			BigInt(c.var.interactor.fid),
 			amount,
-			parseEther(price),
+			parseEther(previousState.prices.sell),
 			referrer as `0x${string}`,
 		]
 	);
@@ -333,8 +318,14 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		? await getCast(previousState.castHash)
 		: c.var.cast;
 
-	const { author, scv, buyPrice, sellPrice, supply, ticketsOwned, activeTier } =
-		await getData(cast, c.var.interactor.fid);
+	const {
+		author,
+		castScore,
+		buyPrice,
+		sellPrice,
+		supply,
+		ticketsOwned,
+	} = await getData(cast, c.var.interactor.fid);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
@@ -346,9 +337,9 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 					? cast.author.verifications[0]
 					: cast.author.custody_address,
 			};
-			previousState.details = {
-				supply: Number(supply),
-				activeTier: Number(activeTier),
+			previousState.prices = {
+				buy: buyPrice,
+				sell: sellPrice,
 			};
 		}
 		if (indexed) previousState.indexed = true;
@@ -416,11 +407,11 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 		const params = new URLSearchParams({
 			author,
-			buyPrice: buyPrice.toString(),
-			sellPrice: sellPrice.toString(),
+			buyPrice: Number(buyPrice).toFixed(5),
+			sellPrice: (Number(sellPrice) * 0.8).toFixed(5),
 			supply: supply.toString(),
 			ticketsOwned: ticketsOwned.toString(),
-			scv: scv.toString(),
+			castScore: castScore.toString(),
 			ownershipPercentage: ownershipPercentage.toString(),
 		});
 
@@ -492,10 +483,6 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 
 	return c.res({
 		image: await getImage(),
-		// imageOptions: {
-		//   width: 1910,
-		//   height: 1000,
-		// },
 		intents: getIntents(),
 	});
 });
@@ -506,7 +493,7 @@ app.image("/ticket-img", async (c) => {
 	const json = removeAmpFromKeys(reqJSON);
 	const {
 		author,
-		scv,
+		castScore,
 		supply,
 		buyPrice,
 		sellPrice,
@@ -570,7 +557,7 @@ app.image("/ticket-img", async (c) => {
 								borderRadius: "10px",
 							}}
 						>
-							{scv}
+							{castScore}
 						</div>
 					</div>
 				</div>
