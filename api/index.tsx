@@ -240,7 +240,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0xf7d4d26165e0fa5ed5e2a0d19aff0ec9c52267da";
+	const testCastHash = "0xb0b13608fcbbe8027fca134a21401d456cf0e869";
 
 	return c.res({
 		image: <></>,
@@ -257,14 +257,18 @@ app.frame("/", (c) => {
 // @ts-ignore
 app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	const { req, deriveState } = c;
-	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1]);
+	
+	const castHash = req.path.split("/")[req.path.split("/").length - 1];
+	let cast = await getCast(castHash);
+	
+	// TODO: return error frame if cast is not in round
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
 		if (cast) previousState.castHash = cast.hash;
 	});
 
-	const castImageUrl = `https://client.warpcast.com/v2/cast-image?castHash=${cast.hash}`;
+	const castImageUrl = `https://client.warpcast.com/v2/cast-image?castHash=${castHash}`;
 
 	return c.res({
 		image: (
@@ -286,10 +290,10 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 			</div>
 		),
 		intents: [
-			<Button action={`/trade`}>Trade</Button>,
+			<Button action={`/trade/${castHash}`}>Trade</Button>,
 			<Button.Link href="https://cast.game/about">Learn more</Button.Link>,
 			<Button.Link
-				href={`https://warpcast.com/${cast.author.username}/${cast.hash}`}
+				href={`https://warpcast.com/${cast.author.username}/${castHash}`}
 			>
 				Cast
 			</Button.Link>,
@@ -298,8 +302,8 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 });
 
 // @ts-ignore
-app.frame("/trade", neynarMiddleware, async (c) => {
-	const { deriveState, previousState, transactionId, buttonValue }: any = c;
+app.frame("/trade/:hash", neynarMiddleware, async (c) => {
+	const { req, deriveState, previousState, transactionId, buttonValue }: any = c;
 
 	let indexed: boolean;
 	let txError: boolean;
@@ -314,9 +318,7 @@ app.frame("/trade", neynarMiddleware, async (c) => {
 		if (parsed.status === "1") indexed = true;
 	}
 
-	let cast = previousState.castHash
-		? await getCast(previousState.castHash)
-		: c.var.cast;
+	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1])
 
 	const {
 		author,
@@ -713,7 +715,7 @@ app.frame("/details", async (c) => {
 			<Button.Link href="https://cast.game">Dashboard</Button.Link>,
 		];
 		if (previousState.castHash) {
-			intents.push(<Button action={`/trade`}>↩</Button>);
+			intents.push(<Button action={`/trade/${previousState.castHash}`}>↩</Button>);
 		}
 		return intents;
 	};
