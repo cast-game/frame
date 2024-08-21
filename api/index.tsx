@@ -411,8 +411,8 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 
 		const params = new URLSearchParams({
 			author,
-			buyPrice: Number(buyPrice).toFixed(5),
-			sellPrice: (Number(sellPrice) * 0.8).toFixed(5),
+			buyPrice: Number(Number(buyPrice).toFixed(5)).toString(),
+			sellPrice: Number((Number(sellPrice) * 0.8).toFixed(5)).toString(),
 			supply: supply.toString(),
 			ticketsOwned: ticketsOwned.toString(),
 			castScore: castScore.toString(),
@@ -713,7 +713,7 @@ app.frame("/details", async (c) => {
 		let intents = [
 			<Button.AddCastAction action="/action">
 				Install Action
-			</Button.AddCastAction>
+			</Button.AddCastAction>,
 		];
 		if (previousState.castHash) {
 			intents.push(
