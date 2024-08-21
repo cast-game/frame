@@ -20,7 +20,7 @@ import { generateSignature } from "../lib/contract.js";
 import { createWarpcastLink, getData, getDetails } from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
-// import { prisma } from "../lib/prisma.js";
+import { prisma } from "../lib/prisma.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
@@ -89,28 +89,28 @@ app.castAction(
 	neynarMiddleware,
 	// @ts-ignore
 	async (c) => {
-		// const round = await prisma.round.findFirst();
-		// const castCreatedTime = new Date(c.var.cast.timestamp);
-		// if (
-		// 	round &&
-		// 	round.url === c.var.cast.parentUrl &&
-		// 	round.startTime < castCreatedTime &&
-		// 	round.tradingEnd > castCreatedTime
-		// ) {
-		if (c.var.cast.channel === null) {
+		const round = await prisma.round.findFirst();
+		const castCreatedTime = new Date(c.var.cast.timestamp).getTime();
+
+		if (
+			!round ||
+			round.channelUrl !== c.var.cast.parentUrl ||
+			round.start.getTime() > castCreatedTime
+		) {
 			return c.error({
-				message: "This cast is not eligible for the current round",
+				message: "This cast is not part of a cast.game round.",
+			});
+		}
+
+		if (round.tradingEnd < new Date()) {
+			return c.error({
+				message: "The trading period for this round has ended.",
 			});
 		}
 
 		return c.frame({
 			path: `/trade/${c.var.cast.hash}`,
 		});
-		// } else {
-		// 	return c.error({
-		// 		message: "This cast is not eligible for the current round",
-		// 	});
-		// }
 	},
 	{ name: "cast.game ticket", icon: "tag" }
 );
@@ -236,7 +236,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0xb0b13608fcbbe8027fca134a21401d456cf0e869";
+	const testCastHash = "0x6021b06e14eef8fad572823362bbc437981f6e54";
 
 	return c.res({
 		image: <></>,
@@ -257,7 +257,18 @@ app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
 	const castHash = req.path.split("/")[req.path.split("/").length - 1];
 	let cast = await getCast(castHash);
 
-	// TODO: return error frame if cast is not in round
+	const round = await prisma.round.findFirst();
+
+	if (
+		!round ||
+		round.channelUrl !== cast.parent_url ||
+		round.start.getTime() > new Date(cast.timestamp).getTime()
+	) {
+		console.log(round?.start.getTime(), new Date(cast.timestamp).getTime());
+		return c.error({
+			message: "This cast is not part of a cast.game round.",
+		});
+	}
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
