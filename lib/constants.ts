@@ -21,10 +21,7 @@ export const getSCVQuery = (castHash: string) => `{
       input: {filter: {hash: {_eq: "${castHash}"}}, blockchain: ALL}
     ) {
       Cast {
-        socialCapitalValue {
-          formattedValue
-        }
-				notaTokenEarned {
+        castValue {
 					formattedValue
 				}
       }
@@ -44,23 +41,28 @@ export function formatNumber(number: number): string {
 // in ETH
 export const priceTiers = [
 	{
-		startingPrice: 0.0001, // $0.25
-		priceAt50: 0.01, // $80
+		basePrice: 0.0001, // $0.25
+		curveExponent: 1.2,
+    scaleFactor: 0.00015,
 	},
-	{
-		startingPrice: 0.0002, // $0.50
-		priceAt50: 0.015, // $100
+  {
+		basePrice: 0.0002, // $0.50
+		curveExponent: 1.25,
+    scaleFactor: 0.00015,
 	},
-	{
-		startingPrice: 0.0005, // $1.25
-		priceAt50: 0.03, // $200
+  {
+		basePrice: 0.0004, // $1
+		curveExponent: 1.3,
+    scaleFactor: 0.00015,
 	},
-	{
-		startingPrice: 0.0008, // $2
-		priceAt50: 0.04, // $250
+  {
+		basePrice: 0.0006, // $1.50
+		curveExponent: 1.3,
+    scaleFactor: 0.0002,
 	},
-	{
-		startingPrice: 0.001, // $2.50
-		priceAt50: 0.05, // $350
+  {
+		basePrice: 0.0008, // $2
+		curveExponent: 1.35,
+    scaleFactor: 0.0002,
 	},
 ];

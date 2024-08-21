@@ -6,7 +6,7 @@ import {
 } from "./constants.js";
 import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { getUser } from "./neynar.js";
-import { formatEther, parseEther } from "viem";
+import { formatEther } from "viem";
 import { client } from "./contract.js";
 import { init, fetchQuery } from "@airstack/node";
 init(process.env.AIRSTACK_API_KEY!);
@@ -14,11 +14,10 @@ init(process.env.AIRSTACK_API_KEY!);
 interface TicketData {
 	author: string;
 	authorPfp: string;
-	scv: number;
-	buyPrice: number;
-	sellPrice: number;
+	castScore: number;
+	buyPrice: string;
+	sellPrice: string;
 	supply: number;
-	topHoldersPfps: string[];
 	ticketsOwned: number;
 	activeTier: number;
 }
@@ -54,29 +53,33 @@ export const getActiveTier = (user: User) => {
 	return tier;
 };
 
-export function getPrice(
+export function getPrice(tier: number, supply: number): string {
+	const { basePrice, curveExponent, scaleFactor } = priceTiers[tier];
+	return (basePrice + scaleFactor * Math.pow(supply, curveExponent)).toFixed(6);
+}
+
+export function getBuyPrice(
 	tier: number,
 	supply: number,
-	amount: number,
-	isSell: boolean = false
-): number {
-	const priceTier = priceTiers[tier];
-	const growthRate =
-		Math.log(priceTier.priceAt50 / priceTier.startingPrice) / 50;
-
+	amount: number
+): string {
 	let totalPrice = 0;
 	for (let i = 0; i < amount; i++) {
-		const supplyToUse = isSell ? supply - i - 1 : supply + i;
-
-		// Break the loop if we're trying to sell more than the available supply
-		if (supplyToUse < 0) break;
-
-		const price = priceTier.startingPrice * Math.exp(growthRate * supplyToUse);
-		totalPrice += price;
+		totalPrice += Number(getPrice(tier, supply + i));
 	}
+	return totalPrice.toFixed(4);
+}
 
-	// Round to 5 decimal places
-	return Math.ceil(totalPrice * 100000) / 100000;
+export function getSellPrice(
+	tier: number,
+	supply: number,
+	amount: number
+): string {
+	let totalPrice = 0;
+	for (let i = 0; i < amount; i++) {
+		totalPrice += Number(getPrice(tier, supply - i - 1));
+	}
+	return totalPrice.toFixed(5);
 }
 
 export const getDetails = async () => {
@@ -106,63 +109,42 @@ export const getDetails = async () => {
 };
 
 export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
-	const [user, ticketDetails, scvRes] = await Promise.all([
+	const [user, ticketDetails, valueRes] = await Promise.all([
 		getUser(fid),
 		queryData(`{
     ticket(id: "${cast.hash}") {
+				buyPrice
+				sellPrice
         activeTier
         holders
         supply
     }}`),
-		// getFiatValue(1),
 		fetchQuery(getSCVQuery(cast.hash)),
 	]);
-	const scvData = scvRes.data.FarcasterCasts.Cast[0];
-	const scv =
-		scvData.socialCapitalValue !== null
-			? scvData.socialCapitalValue.formattedValue.toFixed(2)
-			: 0;
+	let castScore = valueRes.data.FarcasterCasts.Cast[0].castValue.formattedValue;
 
-	const notaTokenEarned =
-		scvData.notaTokenEarned !== null
-			? scvData.notaTokenEarned.formattedValue.toFixed(2)
-			: 0;
-
-	const totalScv = (Number(scv) + Number(notaTokenEarned)).toFixed(2);
+	console.log(ticketDetails)
+	// TODO: round up if >10
+	if (castScore >= 10) {
+		castScore = Math.ceil(castScore);
+	} else {
+		castScore = Math.ceil(castScore);
+	}
 
 	if (!ticketDetails.ticket || ticketDetails.ticket.supply === "0") {
 		const activeTier = getActiveTier(cast.author);
-		const startingPrice = getPrice(activeTier, 0, 1);
 
 		return {
 			author: cast.author.username,
 			authorPfp: cast.author.pfp_url ?? "",
-			scv: Number(totalScv),
-			buyPrice: startingPrice,
-			sellPrice: startingPrice * 0.64,
+			castScore,
+			buyPrice: priceTiers[activeTier].basePrice.toString(),
+			sellPrice: priceTiers[activeTier].basePrice.toString(),
 			supply: 0,
-			topHoldersPfps: [],
 			ticketsOwned: 0,
 			activeTier,
 		};
 	} else {
-		const buyPrice = getPrice(
-			ticketDetails.ticket.activeTier,
-			ticketDetails.ticket.supply,
-			1
-		);
-
-		const sellPrice =
-			Math.ceil(
-				getPrice(
-					ticketDetails.ticket.activeTier,
-					ticketDetails.ticket.supply - 1,
-					1
-				) *
-					0.64 *
-					100000
-			) / 100000;
-
 		const res = await queryData(`{
 			users(where: {id_ends_with: "${cast.hash}"}) {
 				items {
@@ -184,11 +166,10 @@ export const getData = async (cast: Cast, fid: number): Promise<TicketData> => {
 		return {
 			author: cast.author.username,
 			authorPfp: cast.author.pfp_url ?? "",
-			scv,
-			buyPrice,
-			sellPrice,
+			castScore,
+			buyPrice: formatEther(BigInt(ticketDetails.ticket.buyPrice)),
+			sellPrice: formatEther(BigInt(ticketDetails.ticket.sellPrice)),
 			supply: ticketDetails.ticket.supply,
-			topHoldersPfps: [],
 			ticketsOwned,
 			activeTier: ticketDetails.ticket.activeTier,
 		};
