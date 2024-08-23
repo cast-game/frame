@@ -58,10 +58,8 @@ export const app = new Frog<State>({
 		indexed: false,
 		txError: false,
 	},
-	// Supply a Hub to enable frame verification.
 	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
 	verify: "silent",
-	secret: process.env.FROG_SECRET!,
 	imageAspectRatio: "1.91:1",
 	imageOptions: {
 		fonts: [
@@ -90,11 +88,11 @@ app.castAction(
 	// @ts-ignore
 	async (c) => {
 		const round = await prisma.round.findFirst();
-		const castCreatedTime = new Date(c.var.cast.timestamp).getTime();
+		const castCreatedTime = new Date(c.var.cast!.timestamp).getTime();
 
 		if (
 			!round ||
-			round.channelUrl !== c.var.cast.parentUrl ||
+			round.channelUrl !== c.var.cast!.parentUrl ||
 			round.start.getTime() > castCreatedTime
 		) {
 			return c.error({
@@ -109,7 +107,7 @@ app.castAction(
 		}
 
 		return c.frame({
-			path: `/trade/${c.var.cast.hash}`,
+			path: `/trade/${c.var.cast!.hash}`,
 		});
 	},
 	{ name: "cast.game ticket", icon: "tag" }
@@ -117,7 +115,7 @@ app.castAction(
 
 // @ts-ignore
 app.transaction("/buy", neynarMiddleware, async (c) => {
-	const { previousState, frameData, inputText } = c;
+	const { previousState, frameData, inputText } = c as any;
 	const amount = inputText ? BigInt(inputText) : 1n;
 
 	// Check if the frame is a cast
@@ -140,7 +138,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
-		BigInt(c.var.interactor.fid),
+		BigInt(c.var.interactor?.fid!),
 		amount,
 		parseEther(previousState.prices.buy),
 		referrer
@@ -156,7 +154,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		],
 		[
 			previousState.creator.address,
-			BigInt(c.var.interactor.fid),
+			BigInt(c.var.interactor?.fid!),
 			amount,
 			parseEther(previousState.prices.buy),
 			referrer as `0x${string}`,
@@ -177,7 +175,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 
 // @ts-ignore
 app.transaction("/sell", neynarMiddleware, async (c) => {
-	const { previousState, frameData, inputText } = c;
+	const { previousState, frameData, inputText } = c as any;
 	const amount = inputText ? BigInt(inputText) : 1n;
 
 	// Check if the frame is a cast
@@ -199,7 +197,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
-		BigInt(c.var.interactor.fid),
+		BigInt(c.var.interactor?.fid!),
 		amount,
 		parseEther(previousState.prices.sell),
 		referrer
@@ -215,7 +213,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		],
 		[
 			previousState.creator.address,
-			BigInt(c.var.interactor.fid),
+			BigInt(c.var.interactor?.fid!),
 			amount,
 			parseEther(previousState.prices.sell),
 			referrer as `0x${string}`,
@@ -252,12 +250,13 @@ app.frame("/", (c) => {
 
 // @ts-ignore
 app.frame("/ticket/:hash", neynarMiddleware, async (c) => {
-	const { req, deriveState } = c;
+	const { req, deriveState } = c as any;
 
 	const castHash = req.path.split("/")[req.path.split("/").length - 1];
-	let cast = await getCast(castHash);
-
-	const round = await prisma.round.findFirst();
+	const [cast, round] = await Promise.all([
+		getCast(castHash),
+		prisma.round.findFirst(),
+	]);
 
 	if (
 		!round ||
@@ -329,7 +328,7 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 	let cast = await getCast(req.path.split("/")[req.path.split("/").length - 1]);
 
 	const { author, castScore, buyPrice, sellPrice, supply, ticketsOwned } =
-		await getData(cast, c.var.interactor.fid);
+		await getData(cast, c.var.interactor?.fid!);
 
 	// @ts-ignore
 	const state = deriveState((previousState) => {
@@ -405,7 +404,6 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 				</div>
 			);
 		}
-
 		const ownershipPercentage =
 			ticketsOwned === 0 ? 0 : Math.ceil((ticketsOwned / supply) * 100);
 
@@ -419,13 +417,13 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 			ownershipPercentage: ownershipPercentage.toString(),
 		});
 
-		try {
-			await fetch(
-				`${process.env.PUBLIC_URL}/api/ticket-img?${params.toString()}`
-			);
-		} catch (e) {
-			console.log("image fetch error:", e);
-		}
+		// try {
+		// 	await fetch(
+		// 		`${process.env.PUBLIC_URL}/api/ticket-img?${params.toString()}`
+		// 	);
+		// } catch (e) {
+		// 	console.log("image fetch error:", e);
+		// }
 
 		const imageUrl = `${
 			process.env.PUBLIC_URL
@@ -492,7 +490,18 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 });
 
 // @ts-ignore
-app.image("/ticket-img", async (c) => {
+app.image("/ticket-img", (c) => {
+	// const { previousState } = c as any;
+	// const {
+	// 	author,
+	// 	castScore,
+	// 	supply,
+	// 	buyPrice,
+	// 	sellPrice,
+	// 	ticketsOwned,
+	// 	ownershipPercentage,
+	// } = previousState.ticket;
+
 	const reqJSON = c.req.query();
 	const json = removeAmpFromKeys(reqJSON);
 	const {
@@ -508,7 +517,7 @@ app.image("/ticket-img", async (c) => {
 	// const pfps = topHoldersPfps.split(",");
 	// const baseUrl = process.env.NEXT_PUBLIC_API ?? "http://localhost:3000";
 
-	const getImage = async () => {
+	const getImage = () => {
 		return (
 			<div
 				style={{
@@ -668,7 +677,7 @@ app.image("/ticket-img", async (c) => {
 	};
 
 	return c.res({
-		image: await getImage(),
+		image: getImage(),
 		imageOptions: {
 			width: 1910,
 			height: 1000,
@@ -678,7 +687,7 @@ app.image("/ticket-img", async (c) => {
 
 // @ts-ignore
 app.frame("/details", async (c) => {
-	const { previousState } = c;
+	const { previousState } = c as any;
 
 	// TODO: get channelId from db
 	const [channel, details] = await Promise.all([
@@ -696,14 +705,6 @@ app.frame("/details", async (c) => {
 		txCount: details.transactionCount.toString(),
 		userCount: details.userCount.toString(),
 	});
-
-	try {
-		await fetch(
-			`${process.env.PUBLIC_URL}/api/details-img?${params.toString()}`
-		);
-	} catch (e) {
-		console.log("image fetch error:", e);
-	}
 
 	const imageUrl = `${
 		process.env.PUBLIC_URL
