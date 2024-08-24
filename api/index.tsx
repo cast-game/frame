@@ -17,10 +17,16 @@ import {
 import { gameAbi } from "../lib/abis.js";
 import { parseEther, zeroAddress, encodeAbiParameters } from "viem";
 import { generateSignature } from "../lib/contract.js";
-import { createWarpcastLink, getData, getDetails } from "../lib/api.js";
+import {
+	createWarpcastLink,
+	getData,
+	getDetails,
+	queryData,
+} from "../lib/api.js";
 import { getCast, getChannel } from "../lib/neynar.js";
 import { Box, Image } from "./ui.js";
 import { prisma } from "../lib/prisma.js";
+import { getActiveTier, getBuyPrice, getSellPrice } from "../lib/price.js";
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
@@ -135,12 +141,30 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		}
 	}
 
+	let price;
+	if (amount === 1n) price = parseEther(previousState.prices.buy);
+	else {
+		const ticketData = await queryData(`{
+			ticket(id: "${previousState.castHash}") {
+				activeTier
+				supply
+			}
+		}`);
+		const activeTier = getActiveTier(previousState.creator);
+
+		price = getBuyPrice(
+			BigInt(ticketData.ticket ? ticketData.ticket.activeTier : activeTier),
+			BigInt(ticketData.ticket ? ticketData.ticket.supply : 0),
+			amount
+		);
+	}
+
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor?.fid!),
 		amount,
-		parseEther(previousState.prices.buy),
+		price,
 		referrer
 	);
 
@@ -156,7 +180,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 			previousState.creator.address,
 			BigInt(c.var.interactor?.fid!),
 			amount,
-			parseEther(previousState.prices.buy),
+			price,
 			referrer as `0x${string}`,
 		]
 	);
@@ -169,7 +193,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 		functionName: "buy",
 		args,
 		to: gameAddress,
-		value: parseEther(previousState.prices.buy),
+		value: price,
 	});
 });
 
@@ -194,12 +218,29 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 		}
 	}
 
+	let price;
+	if (amount === 1n) price = parseEther(previousState.prices.sell);
+	else {
+		const ticketData = await queryData(`{
+			ticket(id: "${previousState.castHash}") {
+				activeTier
+				supply
+			}
+		}`);
+
+		price = getSellPrice(
+			BigInt(ticketData.ticket.activeTier),
+			BigInt(ticketData.ticket.supply),
+			amount
+		);
+	}
+
 	const signature = await generateSignature(
 		previousState.castHash,
 		previousState.creator.address,
 		BigInt(c.var.interactor?.fid!),
 		amount,
-		parseEther(previousState.prices.sell),
+		price,
 		referrer
 	);
 
@@ -215,7 +256,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 			previousState.creator.address,
 			BigInt(c.var.interactor?.fid!),
 			amount,
-			parseEther(previousState.prices.sell),
+			price,
 			referrer as `0x${string}`,
 		]
 	);

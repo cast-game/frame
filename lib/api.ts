@@ -4,11 +4,12 @@ import {
 	getSCVQuery,
 	priceTiers,
 } from "./constants.js";
-import { Cast, User } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
+import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2/index.js";
 import { getUser } from "./neynar.js";
 import { formatEther } from "viem";
 import { client } from "./contract.js";
 import { init, fetchQuery } from "@airstack/node";
+import { getActiveTier } from "./price.js";
 init(process.env.AIRSTACK_API_KEY!);
 
 interface TicketData {
@@ -22,7 +23,7 @@ interface TicketData {
 	activeTier: number;
 }
 
-const queryData = async (query: string) => {
+export const queryData = async (query: string) => {
 	const res = await fetch(apiEndpoint, {
 		method: "POST",
 		headers: {
@@ -35,52 +36,6 @@ const queryData = async (query: string) => {
 
 	return data;
 };
-
-export const getActiveTier = (user: User) => {
-	let tier;
-	if (user.follower_count < 400) {
-		tier = 0;
-	} else if (user.follower_count > 400 && user.follower_count < 1000) {
-		tier = 1;
-	} else if (user.follower_count > 1000 && user.follower_count < 10000) {
-		tier = 2;
-	} else if (user.follower_count > 10000 && user.follower_count < 50000) {
-		tier = 3;
-	} else {
-		tier = 4;
-	}
-
-	return tier;
-};
-
-export function getPrice(tier: number, supply: number): string {
-	const { basePrice, curveExponent, scaleFactor } = priceTiers[tier];
-	return (basePrice + scaleFactor * Math.pow(supply, curveExponent)).toFixed(6);
-}
-
-export function getBuyPrice(
-	tier: number,
-	supply: number,
-	amount: number
-): string {
-	let totalPrice = 0;
-	for (let i = 0; i < amount; i++) {
-		totalPrice += Number(getPrice(tier, supply + i));
-	}
-	return totalPrice.toFixed(4);
-}
-
-export function getSellPrice(
-	tier: number,
-	supply: number,
-	amount: number
-): string {
-	let totalPrice = 0;
-	for (let i = 0; i < amount; i++) {
-		totalPrice += Number(getPrice(tier, supply - i - 1));
-	}
-	return totalPrice.toFixed(5);
-}
 
 export const getDetails = async () => {
 	const [rewardPool, txsRes, statsRes] = await Promise.all([
