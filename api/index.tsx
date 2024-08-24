@@ -1,7 +1,6 @@
 import { Button, Frog, TextInput } from "frog";
 import { devtools } from "frog/dev";
 import { serveStatic } from "frog/serve-static";
-import { neynar as neynarHub } from "frog/hubs";
 import { neynar } from "frog/middlewares";
 import { handle } from "frog/vercel";
 import {
@@ -12,6 +11,7 @@ import {
 	gameAddress,
 	ipfsGateway,
 	logoIpfsHash,
+	timeUntil,
 	tokenSymbol,
 } from "../lib/constants.js";
 import { gameAbi } from "../lib/abis.js";
@@ -64,7 +64,14 @@ export const app = new Frog<State>({
 		indexed: false,
 		txError: false,
 	},
-	hub: neynarHub({ apiKey: process.env.NEYNAR_API_KEY! }),
+	hub: {
+		apiUrl: "https://hubs.airstack.xyz",
+		fetchOptions: {
+			headers: {
+				"x-airstack-hubs": process.env.AIRSTACK_API_KEY!,
+			},
+		},
+	},
 	verify: "silent",
 	imageAspectRatio: "1.91:1",
 	imageOptions: {
@@ -731,17 +738,24 @@ app.frame("/details", async (c) => {
 	const { previousState } = c as any;
 
 	// TODO: get channelId from db
-	const [channel, details] = await Promise.all([
-		await getChannel("castgame"),
-		await getDetails(),
+	const [round, details] = await Promise.all([
+		prisma.round.findFirst(),
+		getDetails(),
 	]);
 
+	if (!round) {
+		return c.error({
+			message: "Failed to fetch round details.",
+		});
+	}
+
+	const channel = await getChannel(round?.channelId);
+
 	const params = new URLSearchParams({
-		title: "Testnet Demo Competition",
+		title: round?.title ?? "",
 		channelId: channel.id,
 		imageUrl: channel.image_url ?? "",
-		// TODO: get trading end from contract
-		tradingEnd: "__",
+		tradingEnd: timeUntil(round?.tradingEnd),
 		rewardPool: formatNumber(Number(details.rewardPool)),
 		txCount: details.transactionCount.toString(),
 		userCount: details.userCount.toString(),
@@ -931,7 +945,7 @@ app.image("/details-img", (c) => {
 							<span style={{ fontSize: "37px" }}>participants</span>
 						</div>
 					</div>
-					<span>Trading ends in {tradingEnd}.</span>
+					<span>{tradingEnd}.</span>
 				</div>
 			</div>
 		),
