@@ -109,7 +109,7 @@ app.castAction(
 			round.start.getTime() > castCreatedTime
 		) {
 			return c.error({
-				message: "This cast is not part of a cast.game round.",
+				message: `Only casts in /${round?.channelId} are eligible for this round.`,
 			});
 		}
 
