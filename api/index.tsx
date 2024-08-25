@@ -632,7 +632,7 @@ app.image("/ticket-img", (c) => {
 							width: "100%",
 						}}
 					>
-						<span style={{ fontSize: "4.5rem" }}>Tickets minted</span>
+						<span style={{ fontSize: "4.5rem" }}>Tickets bought</span>
 						<span style={{ fontWeight: 600, fontSize: "5rem" }}>{supply}</span>
 						{/* {pfps.map((pfp: string) => (
 							<img
