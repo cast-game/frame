@@ -282,7 +282,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 // @ts-ignore
 // TODO: ideally remove or replace with cover
 app.frame("/", (c) => {
-	const testCastHash = "0x6021b06e14eef8fad572823362bbc437981f6e54";
+	const testCastHash = "0x6fb0ac29eb860ad79b7bd42082d67de9aa7dac85";
 
 	return c.res({
 		image: <></>,
@@ -453,7 +453,7 @@ app.frame("/trade/:hash", neynarMiddleware, async (c) => {
 			);
 		}
 		const ownershipPercentage =
-			ticketsOwned === 0 ? 0 : Math.ceil((ticketsOwned / supply) * 100);
+			ticketsOwned === 0 ? 0 : Math.ceil((ticketsOwned / supply) * 80);
 
 		const params = new URLSearchParams({
 			author,
