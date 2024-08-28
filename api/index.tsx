@@ -149,7 +149,7 @@ app.transaction("/buy", neynarMiddleware, async (c) => {
 	}
 
 	let price;
-	if (amount === 1n) price = parseEther(previousState.prices.buy);
+	if (amount === 1n) price = parseEther(previousState.prices.buy.toString());
 	else {
 		const ticketData = await queryData(`{
 			ticket(id: "${previousState.castHash}") {
@@ -226,7 +226,7 @@ app.transaction("/sell", neynarMiddleware, async (c) => {
 	}
 
 	let price;
-	if (amount === 1n) price = parseEther(previousState.prices.sell);
+	if (amount === 1n) price = parseEther(previousState.prices.sell.toString());
 	else {
 		const ticketData = await queryData(`{
 			ticket(id: "${previousState.castHash}") {
